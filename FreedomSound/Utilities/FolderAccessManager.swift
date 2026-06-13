@@ -347,9 +347,6 @@ final class FolderAccessManager: ObservableObject {
             ).first?.stringValue,
                !artist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 updatedFile.artist = artist
-                if artist.contains("Booba") {
-                    print(file.url)
-                }
             }
         } catch {
             print("Metadata load failed for \(file.fileName): \(error.localizedDescription)")

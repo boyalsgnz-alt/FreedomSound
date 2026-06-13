@@ -68,15 +68,14 @@ struct SongListView: View {
                 Spacer()
             } else {
                 List(filteredSongs) { file in
-                    MusicRowView(file: file)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            audioPlayer.setNewQueue(playlist: songs)
-                            audioPlayer.play(file: file)
-                        }
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets())
-
+                    RowButton(minHeight: 56) {
+                        audioPlayer.setNewQueue(playlist: songs)
+                        audioPlayer.play(file: file)
+                    } content: {
+                        MusicRowView(file: file)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets())
                 }
                 .listRowSpacing(16)
                 .listStyle(.plain)

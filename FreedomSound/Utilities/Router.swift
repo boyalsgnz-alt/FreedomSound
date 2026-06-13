@@ -30,29 +30,68 @@ enum AppScreen: Equatable {
             return "paintbrush.pointed"
         }
     }
+
+    var navigationDepth: Int {
+        switch self {
+        case .home, .settings:
+            return 0
+        case .playlists, .viewtester:
+            return 1
+        case .playlistSongs:
+            return 2
+        }
+    }
+}
+
+enum ScreenTransitionDirection {
+    case forward
+    case backward
+
+    var insertionEdge: Edge {
+        self == .forward ? .trailing : .leading
+    }
+
+    var removalEdge: Edge {
+        self == .forward ? .leading : .trailing
+    }
 }
 
 @MainActor
 final class Router: ObservableObject {
     @Published var currentScreen: AppScreen = .home
+    @Published var transitionDirection: ScreenTransitionDirection = .forward
 
     func goToHome() {
-        currentScreen = .home
+        go(to: .home)
     }
 
     func goToPlaylists() {
-        currentScreen = .playlists
+        go(to: .playlists)
     }
 
     func goToPlaylistSongs() {
-        currentScreen = .playlistSongs
+        go(to: .playlistSongs)
     }
 
     func goToSettings() {
-        currentScreen = .settings
+        go(to: .settings)
     }
 
     func goToViewTester() {
-        currentScreen = .viewtester
+        go(to: .viewtester)
+    }
+
+    func go(to screen: AppScreen) {
+        guard screen != currentScreen else { return }
+
+        transitionDirection = screen.navigationDepth >= currentScreen.navigationDepth ? .forward : .backward
+
+        if screen.navigationDepth == 0 && currentScreen.navigationDepth == 0 {
+            currentScreen = screen
+        } else {
+            withAnimation(.easeInOut(duration: 0.28)) {
+                currentScreen = screen
+            }
+        }
     }
 }

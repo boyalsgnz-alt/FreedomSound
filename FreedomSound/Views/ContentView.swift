@@ -17,26 +17,26 @@ struct ContentView: View {
     
    @ViewBuilder
     func navButton(label: String, screen: AppScreen) -> some View {
-        VStack {
+        VStack(spacing: 2) {
             Button {
-                router.currentScreen = screen
-                print("Button clicked!!")
+                router.go(to: screen)
             } label: {
                 Image(systemName: router.currentScreen == screen ? "\(screen.iconName).fill" : screen.iconName)
-                    .font(.system(size: 24, weight: .medium))
+                    .font(.system(size: 21, weight: .medium))
                     .foregroundStyle(router.currentScreen == screen ? .white : .gray)
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, minHeight: 24)
             }
+            .buttonStyle(.plain)
 
             Text(label)
-                .font(.system(size: 11, weight: router.currentScreen == screen ? .medium : .light))
+                .font(.system(size: 10, weight: router.currentScreen == screen ? .medium : .light))
                 .foregroundStyle(router.currentScreen == screen ? .white : .gray)
         }
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            Group {
+            ZStack {
                 switch router.currentScreen {
                 case .home:
                     LibraryView()
@@ -58,7 +58,15 @@ struct ContentView: View {
                     )
                 }
             }
+            .id(router.currentScreen)
+            .transition(
+                .asymmetric(
+                    insertion: .move(edge: router.transitionDirection.insertionEdge),
+                    removal: .move(edge: router.transitionDirection.removalEdge)
+                )
+            )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
         }
         .onAppear {
             if manager.selectedFolderURL != nil && manager.musicFiles.isEmpty {
@@ -73,7 +81,8 @@ struct ContentView: View {
                 navButton(label: "Settings", screen: .settings)
                 navButton(label: "Tester", screen: .viewtester)
             }
-            .padding(.top, 8)
+            .padding(.top, 5)
+            .padding(.bottom, 3)
             .background(
                     Color.black.opacity(0.90)
                         .ignoresSafeArea(edges: .bottom)

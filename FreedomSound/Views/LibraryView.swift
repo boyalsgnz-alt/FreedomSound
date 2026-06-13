@@ -13,32 +13,36 @@ struct LibraryView: View {
     @EnvironmentObject var router: Router
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             Text("Your library")
                 .font(.title)
-                .padding(.top, 8)
-            List() {
-                Button {
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding()
+
+            List {
+                RowButton(minHeight: 34) {
                     router.goToViewTester()
-                } label: {
-                    HStack {
+                } content: {
+                    HStack(spacing: 12) {
                         Text("All Songs")
                         Spacer()
-                        Text(">")
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .buttonStyle(.plain)
 
-                Button {
+                RowButton(minHeight: 34) {
                     router.goToPlaylists()
-                } label: {
-                    HStack {
+                } content: {
+                    HStack(spacing: 12) {
                         Text("Playlists")
                         Spacer()
-                        Text(">")
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .buttonStyle(.plain)
                 /* Button {
                     print("Row clicked")
                     showingFolderPicker = true
