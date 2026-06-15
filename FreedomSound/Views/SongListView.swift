@@ -16,7 +16,6 @@ struct SongListView: View {
     @State var search: String = ""
     let title: String
     let songs: [MusicFile]
-    let onBack: () -> Void
 
     private var filteredSongs: [MusicFile] {
         manager.searchSongs(in: songs, text: search)
@@ -24,42 +23,41 @@ struct SongListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Button {
-                        onBack()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.title3)
-                            .frame(width: 36, height: 36)
-                            .background {
-                                Circle()
-                                    .fill(.gray.opacity(0.2))
-                            }
-                            .foregroundStyle(.gray)
-                    }
-
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.gray)
-
-                        TextField("Search...", text: $search)
-                            .autocorrectionDisabled(true)
-                            .textInputAutocapitalization(.never)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(.gray.opacity(0.2))
-                    )
-                }
-
-                Text(title)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-            .padding()
+//            VStack(alignment: .leading, spacing: 12) {
+//                HStack {
+//                    Button {
+//                    } label: {
+//                        Image(systemName: "chevron.left")
+//                            .font(.title3)
+//                            .frame(width: 36, height: 36)
+//                            .background {
+//                                Circle()
+//                                    .fill(.gray.opacity(0.2))
+//                            }
+//                            .foregroundStyle(.gray)
+//                    }
+//
+//                    HStack {
+//                        Image(systemName: "magnifyingglass")
+//                            .foregroundStyle(.gray)
+//
+//                        TextField("Search...", text: $search)
+//                            .autocorrectionDisabled(true)
+//                            .textInputAutocapitalization(.never)
+//                    }
+//                    .padding(.horizontal, 12)
+//                    .padding(.vertical, 8)
+//                    .background(
+//                        RoundedRectangle(cornerRadius: 20)
+//                            .fill(.gray.opacity(0.2))
+//                    )
+//                }
+//
+//                Text(title)
+//                    .font(.headline)
+//                    .frame(maxWidth: .infinity, alignment: .center)
+//            }
+//            .padding()
 
             if songs.isEmpty {
                 Spacer()
@@ -88,9 +86,24 @@ struct SongListView: View {
                     .padding(.horizontal, 8)
             }
         }
+        .navigationTitle(title)
+        .toolbar {
+            // Places a button on the top-left (leading) side
+            ToolbarItem(placement: .topBarTrailing) {
+                Button() {}
+                label: {
+                    Image(systemName: "magnifyingglass")
+                }
+            }
+            
+            // Places a button on the bottom toolbar
+            ToolbarItem(placement: .bottomBar) {
+                Button("Refresh") { }
+            }
+        }
     }
 }
 
 #Preview {
-    SongListView(title: "Songs", songs: [], onBack: {})
+    SongListView(title: "Songs", songs: [])
 }

@@ -260,6 +260,7 @@ final class FolderAccessManager: ObservableObject {
                 
                 if let contentType = values.contentType {
                     if contentType.conforms(to: .audio) {
+                        print(fileURL)
                         results.append(fileURL)
                     }
                     else {

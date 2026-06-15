@@ -1,6 +1,6 @@
 import Foundation
 
-struct Playlist: Identifiable, Equatable {
+struct Playlist: Identifiable, Equatable, Hashable {
     let id: String
     let name: String
     let sourceURL: URL

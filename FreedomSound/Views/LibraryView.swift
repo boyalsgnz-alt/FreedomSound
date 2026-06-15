@@ -9,14 +9,14 @@ import SwiftUI
 
 struct LibraryView: View {
     @State private var showingFolderPicker = false
-    @State private var path = NavigationPath()
+    @State private var navPath = NavigationPath()
     @EnvironmentObject var manager: FolderAccessManager
     @EnvironmentObject var router: Router
     
     @State private var items = ["All Songs", "Playlists"]
     
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationStack(path: $navPath) {
             VStack(spacing: 0) {
                 
                 List(items, id: \.self) { item in
@@ -27,10 +27,9 @@ struct LibraryView: View {
                     case "All Songs":
                         SongListView(
                             title: "All Songs",
-                            songs: manager.musicFiles,
-                            onBack: { router.goToHome() })
+                            songs: manager.musicFiles)
                     case "Playlists":
-                        PlaylistsView()
+                        PlaylistsView(navPath: $navPath)
                     default:
                         Text("Unknown Destination")
                     }
