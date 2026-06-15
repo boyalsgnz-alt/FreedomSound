@@ -14,81 +14,24 @@ struct ContentView: View {
     @EnvironmentObject var audioPlayer: AudioPlayer
     @EnvironmentObject var router: Router
     @State private var showingFolderPicker = false
+    @State private var selectedTab = 0
     
-   @ViewBuilder
-    func navButton(label: String, screen: AppScreen) -> some View {
-        VStack(spacing: 2) {
-            Button {
-                router.go(to: screen)
-            } label: {
-                Image(systemName: router.currentScreen == screen ? "\(screen.iconName).fill" : screen.iconName)
-                    .font(.system(size: 21, weight: .medium))
-                    .foregroundStyle(router.currentScreen == screen ? .white : .gray)
-                    .frame(maxWidth: .infinity, minHeight: 24)
-            }
-            .buttonStyle(.plain)
-
-            Text(label)
-                .font(.system(size: 10, weight: router.currentScreen == screen ? .medium : .light))
-                .foregroundStyle(router.currentScreen == screen ? .white : .gray)
-        }
-    }
-
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                switch router.currentScreen {
-                case .home:
-                    LibraryView()
-                case .playlists:
-                    PlaylistsView()
-                case .playlistSongs:
-                    SongListView(
-                        title: manager.currentPlaylistName,
-                        songs: manager.currentPlaylist,
-                        onBack: { router.goToPlaylists() }
-                    )
-                case .settings:
-                    SettingsView()
-                case .viewtester:
-                    SongListView(
-                        title: "All Songs",
-                        songs: manager.musicFiles,
-                        onBack: { router.goToHome() }
-                    )
+        TabView(selection: $selectedTab) {
+            LibraryView()
+                .tabItem {
+                    Label("Library", systemImage: "music.note.house")
                 }
-            }
-            .id(router.currentScreen)
-            .transition(
-                .asymmetric(
-                    insertion: .move(edge: router.transitionDirection.insertionEdge),
-                    removal: .move(edge: router.transitionDirection.removalEdge)
-                )
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
+                .tag(0)
+            Spacer()
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
+                .tag(1)
         }
-        .onAppear {
-            if manager.selectedFolderURL != nil && manager.musicFiles.isEmpty {
-                print("scanFolder begins")
-                manager.scanFolder()
-                print("scanFolder ends")
-            }
-        }
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                navButton(label: "Library", screen: .home)
-                navButton(label: "Settings", screen: .settings)
-                navButton(label: "Tester", screen: .viewtester)
-            }
-            .padding(.top, 5)
-            .padding(.bottom, 3)
-            .background(
-                    Color.black.opacity(0.90)
-                        .ignoresSafeArea(edges: .bottom)
-                )
-        }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .frame(maxWidth: .infinity)
+        .tint(.orange)
     }
 }
 
