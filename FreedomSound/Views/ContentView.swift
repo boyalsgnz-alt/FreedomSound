@@ -23,7 +23,6 @@ struct ContentView: View {
                     Label("Library", systemImage: "music.note.house")
                 }
                 .tag(0)
-            Spacer()
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
@@ -32,6 +31,8 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity)
         .tint(.orange)
+        .toolbarBackground(.black.opacity(0.95), for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
     }
 }
 
