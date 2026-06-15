@@ -27,6 +27,9 @@ struct FreedomSoundApp: App {
                     .environmentObject(folderAccessManager)
                     .environmentObject(audioPlayer)
                     .environmentObject(router)
+                    .task {
+                        folderAccessManager.scanFolder()
+                    }
         }
     }
 }
