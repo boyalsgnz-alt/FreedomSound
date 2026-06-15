@@ -33,6 +33,7 @@ struct RowButton<Content: View>: View {
                         .fill(Color.white.opacity(isTapped ? 0.15 : 0))
                         .allowsHitTesting(false)
                 }
+                .background(.red.opacity(0.2))
         }
         .buttonStyle(.plain)
         .animation(.easeIn(duration: 0.01), value: isTapped)
