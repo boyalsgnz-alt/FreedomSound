@@ -15,6 +15,7 @@ struct SettingsView: View {
     
     var body: some View {
         VStack {
+            CountdownView()
             Text("Settings View")
             Spacer()
             InfinityLoader()

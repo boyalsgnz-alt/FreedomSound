@@ -13,12 +13,17 @@ struct FreedomSoundApp: App {
     @StateObject private var folderAccessManager = FolderAccessManager()
     @StateObject private var audioPlayer: AudioPlayer
     @StateObject private var router: Router
+    let notificationDelegate = NotificationDelegate()
 
     init() {
         let manager = FolderAccessManager()
         _folderAccessManager = StateObject(wrappedValue: manager)
         _audioPlayer = StateObject(wrappedValue: AudioPlayer(folderAccessManager: manager))
         _router = StateObject(wrappedValue: Router())
+        
+        UNUserNotificationCenter.current().delegate = notificationDelegate
+        requestNotificationPermission()
+        scheduleExpiryReminder()
     }
     
     var body: some Scene {
