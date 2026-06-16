@@ -12,65 +12,34 @@ import MediaPlayer
 struct SongListView: View {
     @EnvironmentObject var manager: FolderAccessManager
     @EnvironmentObject var audioPlayer: AudioPlayer
-
-    @State var search: String = ""
+    @State private var showSearch = false
+    
+    @State var query: String = ""
     let title: String
     let songs: [MusicFile]
-
+    
     private var filteredSongs: [MusicFile] {
-        manager.searchSongs(in: songs, text: search)
+        manager.searchSongs(in: songs, text: query)
     }
-
+    
     var body: some View {
-        VStack(spacing: 0) {
-//            VStack(alignment: .leading, spacing: 12) {
-//                HStack {
-//                    Button {
-//                    } label: {
-//                        Image(systemName: "chevron.left")
-//                            .font(.title3)
-//                            .frame(width: 36, height: 36)
-//                            .background {
-//                                Circle()
-//                                    .fill(.gray.opacity(0.2))
-//                            }
-//                            .foregroundStyle(.gray)
-//                    }
-//
-//                    HStack {
-//                        Image(systemName: "magnifyingglass")
-//                            .foregroundStyle(.gray)
-//
-//                        TextField("Search...", text: $search)
-//                            .autocorrectionDisabled(true)
-//                            .textInputAutocapitalization(.never)
-//                    }
-//                    .padding(.horizontal, 12)
-//                    .padding(.vertical, 8)
-//                    .background(
-//                        RoundedRectangle(cornerRadius: 20)
-//                            .fill(.gray.opacity(0.2))
-//                    )
-//                }
-//
-//                Text(title)
-//                    .font(.headline)
-//                    .frame(maxWidth: .infinity, alignment: .center)
-//            }
-//            .padding()
-
-            if songs.isEmpty {
+        if songs.isEmpty {
+            VStack(spacing: 0) {
                 Spacer()
                 Text("No song found")
                     .foregroundStyle(.secondary)
                 Spacer()
-            } else {
-                List(filteredSongs) { file in
-                    RowButton(minHeight: 56) {
-                        audioPlayer.setNewQueue(playlist: songs)
-                        audioPlayer.play(file: file)
-                    } content: {
-                        MusicRowView(file: file)
+            }
+        } else {
+            ScrollViewReader { proxy in
+                List() {
+                        ForEach(filteredSongs) { file in
+                            RowButton(minHeight: 30) {
+                                audioPlayer.setNewQueue(playlist: songs)
+                                audioPlayer.play(file: file)
+                            } content: {
+                                MusicRowView(file: file)
+                            }.id(file.id)
                     }
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets())
@@ -78,27 +47,29 @@ struct SongListView: View {
                 .listRowSpacing(16)
                 .listStyle(.plain)
                 .padding(.horizontal, 12)
-            }
-        }
-        .overlay(alignment: .bottom) {
-            if audioPlayer.currentFile != nil {
-                FloatingPlayerView()
-                    .padding(.horizontal, 8)
-            }
-        }
-        .navigationTitle(title)
-        .toolbar {
-            // Places a button on the top-left (leading) side
-            ToolbarItem(placement: .topBarTrailing) {
-                Button() {}
-                label: {
-                    Image(systemName: "magnifyingglass")
+                .padding(.vertical, 0)
+                .searchable(text: $query)
+                .overlay(alignment: .bottom) {
+                    if audioPlayer.currentFile != nil {
+                        FloatingPlayerView()
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 8)
+                    }
                 }
-            }
-            
-            // Places a button on the bottom toolbar
-            ToolbarItem(placement: .bottomBar) {
-                Button("Refresh") { }
+                .navigationTitle(title)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            withAnimation {
+                                if let first = filteredSongs.first {
+                                    proxy.scrollTo(first.id, anchor: .top)
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up")
+                        }
+                    }
+                }
             }
         }
     }
