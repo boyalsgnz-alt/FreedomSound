@@ -45,6 +45,10 @@ enum RepeatMode {
     }
 }
 
+final class PlaylistQueue {
+    
+}
+
 @MainActor
 final class PlaybackQueue {
     private let libraryProvider: () -> [MusicFile]

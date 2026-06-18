@@ -21,6 +21,7 @@ final class ArtworkLoader {
     }
 
     func loadArtwork(for url: URL, fullSize: Bool) -> Task<UIImage?, Never> {
+        print("loadArtwork called")
         if let cached = cache.object(forKey: url as NSURL), !fullSize {
             return Task { cached }
         }
@@ -70,6 +71,7 @@ final class ArtworkLoader {
             }
             return downsampleArtwork(data: artworkData, maxPixelSize: 120)
         } catch {
+            print("Artwork load failed: \(error.localizedDescription)")
             return nil
         }
     }

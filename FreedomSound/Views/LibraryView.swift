@@ -11,7 +11,6 @@ struct LibraryView: View {
     @State private var showingFolderPicker = false
     @State private var navPath = NavigationPath()
     @EnvironmentObject var manager: FolderAccessManager
-    @EnvironmentObject var router: Router
     
     @State private var items = ["All Songs", "Playlists"]
     

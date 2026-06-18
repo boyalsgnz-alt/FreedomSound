@@ -10,6 +10,79 @@ import UIKit
 import Combine
 import MediaPlayer
 
+// What does this do?
+
+// Ideally, this would have to only manage the picked folder
+// This SHOULDN'T HAVE to manage playlists, or other things.
+
+final class FolderManager: ObservableObject {
+    @Published var musicFolder: URL?
+    private let bookmarkKey = "SelectedMusicFolderBookmark"
+    
+    init() {
+        
+    }
+    
+    func savePickedFolder(_ folderURL: URL) {
+        print("Picked folder path:", folderURL.path)
+        
+        let didAccess = folderURL.startAccessingSecurityScopedResource()
+        defer {
+            if didAccess {
+                folderURL.stopAccessingSecurityScopedResource()
+            }
+        }
+        
+        do {
+            let bookmarkData = try folderURL.bookmarkData(
+                options: [],
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+            
+            UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
+            musicFolder = folderURL
+        } catch {
+            print("Failed to save bookmark:", error)
+        }
+    }
+    
+    func restoreFolderFromBookmark() {
+        
+        guard let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) else {
+            return
+        }
+        
+        do {
+            var isStale = false
+            let url = try URL(
+                resolvingBookmarkData: bookmarkData,
+                options: [],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            )
+            
+            if isStale {
+                let newBookmark = try url.bookmarkData(
+                    options: [],
+                    includingResourceValuesForKeys: nil,
+                    relativeTo: nil
+                )
+                UserDefaults.standard.set(newBookmark, forKey: bookmarkKey)
+            }
+            
+            musicFolder = url
+        } catch {
+            return
+        }
+    }
+    
+    func clearSavedFolder() {
+        UserDefaults.standard.removeObject(forKey: bookmarkKey)
+        musicFolder = nil
+    }
+}
+
 @MainActor
 final class FolderAccessManager: ObservableObject {
     @Published var selectedFolderURL: URL?
@@ -150,7 +223,6 @@ final class FolderAccessManager: ObservableObject {
                 }
             }
 
-            print("Playlist \"\(playlistName)\" has \(trackFileNames.count) entries")
             return Playlist(
                 id: fileURL.path,
                 name: playlistName,
@@ -164,6 +236,7 @@ final class FolderAccessManager: ObservableObject {
     }
     
     func scanFolder() {
+        print("scan folder is launched")
         guard let folderURL = selectedFolderURL else {
             statusMessage = "No folder selected"
             musicFiles = []
@@ -178,9 +251,10 @@ final class FolderAccessManager: ObservableObject {
                 return
             }
             
-            defer {
-                folderURL.stopAccessingSecurityScopedResource()
-            }
+//            defer {
+//                print("defer accessing security launched")
+//                folderURL.stopAccessingSecurityScopedResource()
+//            }
             
             do {
                 
@@ -224,6 +298,7 @@ final class FolderAccessManager: ObservableObject {
     }
     
     private nonisolated func recursiveAudioFiles(in folderURL: URL) throws -> ([URL], [URL]) {
+        print("recursive audio files launched")
         let keys: Set<URLResourceKey> = [
             .isDirectoryKey,
             .isRegularFileKey,
@@ -260,7 +335,6 @@ final class FolderAccessManager: ObservableObject {
                 
                 if let contentType = values.contentType {
                     if contentType.conforms(to: .audio) {
-                        print(fileURL)
                         results.append(fileURL)
                     }
                     else {
@@ -281,6 +355,7 @@ final class FolderAccessManager: ObservableObject {
     }
 
     private func loadMetadataProgressively(for files: [MusicFile]) {
+        print("loadMetadataProgressively launched")
         let maxConcurrentLoads = 4
         let publishBatchSize = 200
 
@@ -321,6 +396,10 @@ final class FolderAccessManager: ObservableObject {
                         }
                     }
                 }
+            }
+            await MainActor.run {
+                print("main actor should stop accessing security resource")
+                self?.selectedFolderURL?.stopAccessingSecurityScopedResource()
             }
         }
     }

@@ -12,7 +12,6 @@ import MediaPlayer
 struct ContentView: View {
     @EnvironmentObject var manager: FolderAccessManager
     @EnvironmentObject var audioPlayer: AudioPlayer
-    @EnvironmentObject var router: Router
     @State private var showingFolderPicker = false
     @State private var selectedTab = 0
     
