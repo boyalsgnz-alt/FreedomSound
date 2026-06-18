@@ -23,9 +23,7 @@ struct AppleRowButtonStyle: ButtonStyle {
             .onChange(of: configuration.isPressed) { _, isPressed in
                 if isPressed {
                     didTriggerHaptic = false
-                    print("has been pressed")
                 } else if !didTriggerHaptic {
-                    print("has been pressed")
                     let generator = UIImpactFeedbackGenerator(style: .light)
                     generator.impactOccurred()
                     didTriggerHaptic = true

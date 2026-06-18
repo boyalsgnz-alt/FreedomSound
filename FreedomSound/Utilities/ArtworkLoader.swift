@@ -21,7 +21,6 @@ final class ArtworkLoader {
     }
 
     func loadArtwork(for url: URL, fullSize: Bool) -> Task<UIImage?, Never> {
-        print("loadArtwork called")
         if let cached = cache.object(forKey: url as NSURL), !fullSize {
             return Task { cached }
         }

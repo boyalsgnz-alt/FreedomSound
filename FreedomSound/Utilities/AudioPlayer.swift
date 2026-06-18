@@ -328,7 +328,6 @@ final class AudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
             newPlayer.prepareToPlay()
 
             guard newPlayer.play() else {
-                print("play() failed")
                 return
             }
 

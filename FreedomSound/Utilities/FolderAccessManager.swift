@@ -10,17 +10,12 @@ import UIKit
 import Combine
 import MediaPlayer
 
-// What does this do?
-
-// Ideally, this would have to only manage the picked folder
-// This SHOULDN'T HAVE to manage playlists, or other things.
-
 final class FolderManager: ObservableObject {
     @Published var musicFolder: URL?
     private let bookmarkKey = "SelectedMusicFolderBookmark"
     
     init() {
-        
+        restoreFolderFromBookmark()
     }
     
     func savePickedFolder(_ folderURL: URL) {
@@ -67,7 +62,7 @@ final class FolderManager: ObservableObject {
                 )
                 UserDefaults.standard.set(newBookmark, forKey: bookmarkKey)
             }
-            
+            print("restored bookmark")
             musicFolder = url
         } catch {
             return
@@ -107,8 +102,6 @@ final class FolderAccessManager: ObservableObject {
     ]
     
     func savePickedFolder(_ folderURL: URL) {
-        print("Picked folder path:", folderURL.path)
-        
         let didAccess = folderURL.startAccessingSecurityScopedResource()
         defer {
             if didAccess {
@@ -169,7 +162,6 @@ final class FolderAccessManager: ObservableObject {
     }
     
     func clearSavedFolder() {
-        print("clearSavedFolder called")
         UserDefaults.standard.removeObject(forKey: bookmarkKey)
         selectedFolderURL = nil
         musicFiles = []
@@ -238,7 +230,6 @@ final class FolderAccessManager: ObservableObject {
     }
     
     func scanFolder() {
-        print("scan folder is launched")
         guard let folderURL = selectedFolderURL else {
             statusMessage = "No folder selected"
             musicFiles = []
@@ -252,11 +243,6 @@ final class FolderAccessManager: ObservableObject {
                 self.statusMessage = "Saved folder is no longer accessible. Please choose it again."
                 return
             }
-            
-//            defer {
-//                print("defer accessing security launched")
-//                folderURL.stopAccessingSecurityScopedResource()
-//            }
             
             do {
                 
@@ -300,7 +286,6 @@ final class FolderAccessManager: ObservableObject {
     }
     
     private nonisolated func recursiveAudioFiles(in folderURL: URL) throws -> ([URL], [URL]) {
-        print("recursive audio files launched")
         let keys: Set<URLResourceKey> = [
             .isDirectoryKey,
             .isRegularFileKey,
@@ -357,7 +342,6 @@ final class FolderAccessManager: ObservableObject {
     }
 
     private func loadMetadataProgressively(for files: [MusicFile]) {
-        print("loadMetadataProgressively launched")
         let maxConcurrentLoads = 4
         let publishBatchSize = 200
 
@@ -400,7 +384,6 @@ final class FolderAccessManager: ObservableObject {
                 }
             }
             await MainActor.run {
-                print("main actor should stop accessing security resource")
                 self?.selectedFolderURL?.stopAccessingSecurityScopedResource()
             }
         }

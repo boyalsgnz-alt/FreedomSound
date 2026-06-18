@@ -19,7 +19,7 @@ final class LibraryCoordinator {
     }
     
     func loadLibrary() {
-        // var folderToScan = folderMgr.getFolder()
+        var folderToScan = folderMgr.musicFolder
         // var [filesURL, playlistFiles] = libScanner.scanFolder(folderToScan)
         // var musicFiles = metadataParser.parseFiles(filesURL)
         // playbackMgr.setAllSongs(musicFiles)
