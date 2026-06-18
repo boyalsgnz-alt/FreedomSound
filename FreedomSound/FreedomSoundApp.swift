@@ -12,9 +12,32 @@ import AVFoundation
 struct FreedomSoundApp: App {
     @StateObject private var folderAccessManager = FolderAccessManager()
     @StateObject private var audioPlayer: AudioPlayer
+    
+    /* NEW CODE */
+    @StateObject private var folderManager = FolderManager()
+    @StateObject private var playbackManager = PlaybackManager()
+    private let scanner = LibraryScanner()
+    private let parser = MetadataParser()
+
+    private let coordinator: LibraryCoordinator
+    /* END OF NEW CODE */
     let notificationDelegate = NotificationDelegate()
 
     init() {
+        /* NEW CODE */
+        let folderManager = FolderManager()
+                let playbackManager = PlaybackManager()
+
+                self.coordinator = LibraryCoordinator(
+                    libScanner: scanner,
+                    folderMgr: folderManager,
+                    playbackMgr: playbackManager,
+                    metadataParser: parser
+                )
+
+                _folderManager = StateObject(wrappedValue: folderManager)
+                _playbackManager = StateObject(wrappedValue: playbackManager)
+        /* END OF NEW CODE */
         let manager = FolderAccessManager()
         _folderAccessManager = StateObject(wrappedValue: manager)
         _audioPlayer = StateObject(wrappedValue: AudioPlayer(folderAccessManager: manager))
@@ -32,6 +55,9 @@ struct FreedomSoundApp: App {
                     .task {
                         folderAccessManager.scanFolder()
                     }
+        }
+        .onChange(of: folderManager.musicFolder) {
+            coordinator.loadLibrary()
         }
     }
 }

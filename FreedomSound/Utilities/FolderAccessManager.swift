@@ -24,8 +24,6 @@ final class FolderManager: ObservableObject {
     }
     
     func savePickedFolder(_ folderURL: URL) {
-        print("Picked folder path:", folderURL.path)
-        
         let didAccess = folderURL.startAccessingSecurityScopedResource()
         defer {
             if didAccess {
@@ -48,7 +46,6 @@ final class FolderManager: ObservableObject {
     }
     
     func restoreFolderFromBookmark() {
-        
         guard let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) else {
             return
         }
@@ -79,6 +76,11 @@ final class FolderManager: ObservableObject {
     
     func clearSavedFolder() {
         UserDefaults.standard.removeObject(forKey: bookmarkKey)
+        musicFolder = nil
+    }
+    
+    deinit {
+        musicFolder?.stopAccessingSecurityScopedResource()
         musicFolder = nil
     }
 }
