@@ -12,19 +12,36 @@ import AVFoundation
 final class MetadataParser {
     
     func parseAudioFiles(files: [URL]) async -> ([Track], [Playlist]) {
-        var allSongs: [Track] = []
-        var allPlaylists: [Playlist] = []
+        let mp3Files = files.filter { $0.pathExtension == "mp3"}
+        let m3uFiles = files.filter { $0.pathExtension == "m3u" }
         
-        for file in files {
-            if file.pathExtension == "m3u" {
-                let newPlaylist = parseM3UFile(file: file)!
-                allPlaylists.append(newPlaylist)
-            } else {
-                let newFile = await parseMP3File(file: file)
-                allSongs.append(newFile)
+        let allPlaylists: [Playlist] = m3uFiles.compactMap { parseM3UFile(file: $0) }
+        
+        let allSongs = await parseMP3FilesConcurrently(files: mp3Files)
+        
+        return (allSongs, allPlaylists)
+    }
+    
+    private func parseMP3FilesConcurrently(files: [URL], batchSize: Int = 50) async -> [Track] {
+        var allTracks: [Track] = []
+        
+        let batches = stride(from: 0, to: files.count, by: batchSize).map {
+            Array(files[$0..<min($0 + batchSize, files.count)])
+        }
+        
+        for batch in batches {
+            await withTaskGroup(of: Track.self) { group in
+                for file in batch {
+                    group.addTask {
+                        await self.parseMP3File(file: file)
+                    }
+                }
+                for await track in group {
+                    allTracks.append(track)
+                }
             }
         }
-        return (allSongs, allPlaylists)
+        return allTracks
     }
     
     private func parseMP3File(file: URL) async -> Track {

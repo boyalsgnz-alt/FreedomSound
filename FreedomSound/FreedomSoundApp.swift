@@ -11,7 +11,7 @@ import AVFoundation
 @main
 struct FreedomSoundApp: App {
     @StateObject private var folderAccessManager = FolderAccessManager()
-    @StateObject private var audioPlayer: AudioPlayer
+//    @StateObject private var audioPlayer: AudioPlayer
     
     /* NEW CODE */
     @StateObject private var folderManager: FolderManager
@@ -20,6 +20,7 @@ struct FreedomSoundApp: App {
     @StateObject private var audioEngine: AudioEngine
     private let scanner = LibraryScanner()
     private let parser = MetadataParser()
+    private let lockScreen: LockScreenManager
     
     private let coordinator: LibraryCoordinator
     /* END OF NEW CODE */
@@ -37,17 +38,23 @@ struct FreedomSoundApp: App {
             folderMgr: folderManager,
             playbackMgr: playbackManager,
             metadataParser: parser,
-            libraryStore: libraryStore
+            libraryStore: libraryStore,
+            audioEngine: audioEngine
         )
+        self.lockScreen = LockScreenManager(playbackQueue: playbackManager, audioEngine: audioEngine)
         
         _folderManager = StateObject(wrappedValue: folderManager)
         _playbackManager = StateObject(wrappedValue: playbackManager)
         _libraryStore = StateObject(wrappedValue: libraryStore)
+        
+        audioEngine.onTrackFinished = { [weak playbackManager] in
+            playbackManager?.nextTrack()
+        }
         /* END OF NEW CODE */
         let manager = FolderAccessManager()
         _folderAccessManager = StateObject(wrappedValue: manager)
         _audioEngine = StateObject(wrappedValue: audioEngine)
-        _audioPlayer = StateObject(wrappedValue: AudioPlayer(folderAccessManager: manager))
+//        _audioPlayer = StateObject(wrappedValue: AudioPlayer(folderAccessManager: manager))
         
         UNUserNotificationCenter.current().delegate = notificationDelegate
         requestNotificationPermission()
@@ -59,13 +66,13 @@ struct FreedomSoundApp: App {
             ContentView()
                 .environmentObject(folderAccessManager)
                 .environmentObject(folderManager)
-                .environmentObject(audioPlayer)
+//                .environmentObject(audioPlayer)
                 .environmentObject(libraryStore)
                 .environmentObject(playbackManager)
                 .environmentObject(audioEngine)
                 .task(id: folderManager.musicFolder) {
                     /* Needs this line to load songs, old system */
-                    folderAccessManager.scanFolder()
+                    // folderAccessManager.scanFolder()
                     /* End of old system */
                     guard folderManager.musicFolder != nil else { return }
                     await coordinator.loadLibrary()

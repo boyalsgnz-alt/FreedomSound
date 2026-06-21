@@ -12,12 +12,12 @@ import MediaPlayer
 struct SongListView: View {
     @EnvironmentObject var manager: FolderAccessManager
     @EnvironmentObject var playbackMgr: PlaybackQueuee
-    @EnvironmentObject var audioPlayer: AudioPlayer
+//    @EnvironmentObject var audioPlayer: AudioPlayer
     @State private var showSearch = false
     
     @State var query: String = ""
     let title: String
-    let songs: [Track]
+    // let songs: [Track]
     
     private var filteredSongs: [Track] {
         playbackMgr.searchTracks(query: query)
@@ -36,9 +36,7 @@ struct SongListView: View {
                 List() {
                         ForEach(filteredSongs) { file in
                             RowButton(minHeight: 30) {
-                                playbackMgr.playSong(track: file)
-                                //audioPlayer.setNewQueue(playlist: songs)
-                                // audioPlayer.play(file: file)
+                                playbackMgr.setCurrentTrack(track: file)
                             } content: {
                                 MusicRowView(file: file)
                             }.id(file.id)
@@ -58,12 +56,12 @@ struct SongListView: View {
                             .padding(.vertical, 8)
                     }
                 }
-                .navigationTitle(title)
+                .navigationTitle(playbackMgr.currentPlaylist!.name)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             withAnimation {
-                                if let first = songs.first {
+                                if let first = filteredSongs.first {
                                     proxy.scrollTo(first.id, anchor: .top)
                                 }
                             }
@@ -77,6 +75,6 @@ struct SongListView: View {
     }
 }
 
-#Preview {
+/* #Preview {
     SongListView(title: "Songs", songs: [])
-}
+} */

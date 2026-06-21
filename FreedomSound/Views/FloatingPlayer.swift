@@ -9,7 +9,7 @@ import SwiftUI
 import AVFoundation
 
 struct FloatingPlayerView: View {
-    @EnvironmentObject var audioPlayer: AudioPlayer
+//    @EnvironmentObject var audioPlayer: AudioPlayer
     @EnvironmentObject var audioEngine: AudioEngine
     @EnvironmentObject var playbackMgr: PlaybackQueuee
     @State private var loadTask: Task<Void, Never>?
@@ -80,7 +80,6 @@ struct FloatingPlayerView: View {
         }
         .shadow(radius: 8)
         .task(id: playbackMgr.currentTrack!.url) {
-            if artwork != nil { return }
 
             if let cached = ArtworkLoader.shared.cachedImage(for: playbackMgr.currentTrack!.url) {
                 artwork = cached

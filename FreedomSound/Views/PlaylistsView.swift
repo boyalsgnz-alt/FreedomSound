@@ -54,7 +54,6 @@ struct PlaylistsView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            //
             if libraryStore.playlists.isEmpty {
                 Text("No playlists found")
                     .foregroundStyle(.secondary)
@@ -87,8 +86,7 @@ struct PlaylistsView: View {
                 .listStyle(.plain)
                 .navigationDestination(for: Playlist.self) { item in
                     SongListView(
-                        title: item.name,
-                        songs: playbackMgr.playlistTracks!)
+                        title: item.name)
                 }
                 .navigationTitle("Playlists")
             }

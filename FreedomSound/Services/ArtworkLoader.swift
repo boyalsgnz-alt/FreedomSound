@@ -33,9 +33,9 @@ final class ArtworkLoader {
 
         let task = Task(priority: .utility) { [weak self] () -> UIImage? in
             defer {
-                self?.lock.lock()
-                self?.runningTasks[url] = nil
-                self?.lock.unlock()
+                self?.lock.withLock {
+                    self?.runningTasks[url] = nil
+                }
             }
 
             let image = await Self.extractArtwork(from: url, fullSize: fullSize)

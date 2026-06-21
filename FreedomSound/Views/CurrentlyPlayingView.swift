@@ -11,10 +11,11 @@ import AVFoundation
 struct CurrentlyPlayingView: View {
     @State private var loadTask: Task<Void, Never>?
     @Binding var isToggled: Bool
-    @EnvironmentObject var audioPlayer: AudioPlayer
+//    @EnvironmentObject var audioPlayer: AudioPlayer
     @EnvironmentObject var audioEngine: AudioEngine
     @EnvironmentObject var playbackMgr: PlaybackQueuee
     @State private var isEditingSlider = false
+    @State private var artwork: UIImage?
     
     func formatTime(_ time: Double) -> String {
         let totalSeconds = Int(time)
@@ -74,7 +75,7 @@ struct CurrentlyPlayingView: View {
                 Spacer()
                 
                 Group {
-                    if let artwork = audioPlayer.currentArtworkLarge {
+                    if let artwork = artwork {
                         Image(uiImage: artwork)
                             .resizable()
                             .scaledToFit()
@@ -111,7 +112,7 @@ struct CurrentlyPlayingView: View {
                         ),
                         in: 0...(max(audioEngine.duration, 1)),
                         onEditingChanged: { editing in
-                            audioPlayer.isScrubbing = editing
+                            audioEngine.isScrubbing = editing
                             
                             if !editing {
                                 audioEngine.seek(to: audioEngine.currentTime)
@@ -131,8 +132,8 @@ struct CurrentlyPlayingView: View {
                 Spacer()
                 
                 HStack(spacing: 4) {
-                    controlButton(systemName: "shuffle", iconSize: 18, buttonSize: 44, color: audioPlayer.isShuffleOn ? .green : .white, circled: false) {
-                        // playbackMgr.isShuffleOn.toggle()
+                    controlButton(systemName: "shuffle", iconSize: 18, buttonSize: 44, color: playbackMgr.isShuffled ? .green : .white, circled: false) {
+                        playbackMgr.enableShuffle()
                     }
                     controlButton(systemName: "backward.end.fill", iconSize: 32, buttonSize: 50, circled: false) {
                         playbackMgr.prevTrack()
@@ -147,13 +148,31 @@ struct CurrentlyPlayingView: View {
                     controlButton(systemName: "forward.end.fill", iconSize: 32, buttonSize: 50, circled: false) {
                         playbackMgr.nextTrack()
                     }
-                    controlButton(systemName: audioPlayer.repeatMode.iconName, iconSize: 18, buttonSize: 44, color: audioPlayer.repeatMode.color, circled: false) {
+                    controlButton(systemName: playbackMgr.repeatMode.iconName, iconSize: 18, buttonSize: 44, color: playbackMgr.repeatMode.color, circled: false) {
                         playbackMgr.shiftRepeatMode()
                     }
                 }
                 .padding(.horizontal, 8)
                 
                 Spacer()
+            }
+            .task(id: playbackMgr.currentTrack!.url) {
+                if artwork != nil { return }
+
+//                if let cached = ArtworkLoader.shared.cachedImage(for: playbackMgr.currentTrack!.url) {
+//                    artwork = cached
+//                    return
+//                }
+
+                let task = Task {
+                    let image = await ArtworkLoader.shared.loadArtwork(for: playbackMgr.currentTrack!.url, fullSize: true).value
+                    if !Task.isCancelled {
+                        artwork = image
+                    }
+                }
+
+                loadTask = task
+                await task.value
             }
         }
     }
