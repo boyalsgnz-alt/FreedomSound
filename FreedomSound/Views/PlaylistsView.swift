@@ -48,18 +48,24 @@ struct RowButtonTest<Content: View>: View {
 
 struct PlaylistsView: View {
     @EnvironmentObject var manager: FolderAccessManager
+    @EnvironmentObject var libraryStore: LibraryStore
+    @EnvironmentObject var playbackMgr: PlaybackQueuee
     @Binding var navPath: NavigationPath
     
     var body: some View {
         VStack(spacing: 0) {
             //
-            if manager.playlists.isEmpty {
+            if libraryStore.playlists.isEmpty {
                 Text("No playlists found")
                     .foregroundStyle(.secondary)
             } else {
-                List(manager.playlists, id: \.id) { playlist in
+                List(libraryStore.playlists, id: \.id) { playlist in
                     RowButtonTest(minHeight: 20) {
-                        manager.selectPlaylist(playlist)
+                        let tracks = libraryStore.tracks.filter {
+                            playlist.trackFileNames.contains($0.fileName)
+                        }
+                        playbackMgr.setNewPlaylist(playlist: playlist, tracks: tracks)
+                        // manager.selectPlaylist(playlist)
                         navPath.append(playlist)
                     } content: {
                         HStack {
@@ -82,7 +88,7 @@ struct PlaylistsView: View {
                 .navigationDestination(for: Playlist.self) { item in
                     SongListView(
                         title: item.name,
-                        songs: manager.currentPlaylist)
+                        songs: playbackMgr.playlistTracks!)
                 }
                 .navigationTitle("Playlists")
             }

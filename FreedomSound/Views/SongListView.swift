@@ -11,19 +11,20 @@ import MediaPlayer
 
 struct SongListView: View {
     @EnvironmentObject var manager: FolderAccessManager
+    @EnvironmentObject var playbackMgr: PlaybackQueuee
     @EnvironmentObject var audioPlayer: AudioPlayer
     @State private var showSearch = false
     
     @State var query: String = ""
     let title: String
-    let songs: [MusicFile]
+    let songs: [Track]
     
-    private var filteredSongs: [MusicFile] {
-        manager.searchSongs(in: songs, text: query)
+    private var filteredSongs: [Track] {
+        playbackMgr.searchTracks(query: query)
     }
     
     var body: some View {
-        if songs.isEmpty {
+        if filteredSongs.isEmpty {
             VStack(spacing: 0) {
                 Spacer()
                 Text("No song found")
@@ -35,8 +36,9 @@ struct SongListView: View {
                 List() {
                         ForEach(filteredSongs) { file in
                             RowButton(minHeight: 30) {
-                                audioPlayer.setNewQueue(playlist: songs)
-                                audioPlayer.play(file: file)
+                                playbackMgr.playSong(track: file)
+                                //audioPlayer.setNewQueue(playlist: songs)
+                                // audioPlayer.play(file: file)
                             } content: {
                                 MusicRowView(file: file)
                             }.id(file.id)
@@ -50,7 +52,7 @@ struct SongListView: View {
                 .padding(.vertical, 0)
                 .searchable(text: $query)
                 .overlay(alignment: .bottom) {
-                    if audioPlayer.currentFile != nil {
+                    if playbackMgr.currentTrack != nil {
                         FloatingPlayerView()
                             .padding(.horizontal, 8)
                             .padding(.vertical, 8)
@@ -61,7 +63,7 @@ struct SongListView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             withAnimation {
-                                if let first = filteredSongs.first {
+                                if let first = songs.first {
                                     proxy.scrollTo(first.id, anchor: .top)
                                 }
                             }

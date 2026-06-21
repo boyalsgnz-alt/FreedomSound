@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MusicRowView: View {
-    let file: MusicFile
+    let file: Track
 
     @State private var artwork: UIImage?
     @State private var loadTask: Task<Void, Never>?

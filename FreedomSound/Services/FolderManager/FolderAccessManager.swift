@@ -15,6 +15,7 @@ final class FolderManager: ObservableObject {
     private let bookmarkKey = "SelectedMusicFolderBookmark"
     
     init() {
+
         restoreFolderFromBookmark()
     }
     
@@ -62,7 +63,7 @@ final class FolderManager: ObservableObject {
                 )
                 UserDefaults.standard.set(newBookmark, forKey: bookmarkKey)
             }
-            print("restored bookmark")
+            
             musicFolder = url
         } catch {
             return
@@ -83,8 +84,8 @@ final class FolderManager: ObservableObject {
 @MainActor
 final class FolderAccessManager: ObservableObject {
     @Published var selectedFolderURL: URL?
-    @Published var musicFiles: [MusicFile] = []
-    @Published var currentPlaylist: [MusicFile] = []
+    @Published var musicFiles: [Track] = []
+    @Published var currentPlaylist: [Track] = []
     @Published var currentPlaylistName: String = "Playlist"
     @Published var playlists: [Playlist] = []
     @Published var statusMessage: String = "No folder selected"
@@ -180,7 +181,7 @@ final class FolderAccessManager: ObservableObject {
         currentPlaylistName = playlist.name
     }
 
-    func parseM3U(fileURL: URL, library: [MusicFile]) -> Playlist? {
+    func parseM3U(fileURL: URL, library: [Track]) -> Playlist? {
         do {
             let content = try String(contentsOf: fileURL, encoding: .utf8)
             let lines = content.components(separatedBy: .newlines)
@@ -256,7 +257,7 @@ final class FolderAccessManager: ObservableObject {
                             $0.lastPathComponent.localizedCaseInsensitiveCompare($1.lastPathComponent) == .orderedAscending
                         }
                     foundPlaylistsURLs = lmao.1
-                    return foundURLs.map { MusicFile(url: $0) }
+                    return foundURLs.map { Track(url: $0) }
                 }.value
                 
                 self.playlists = foundPlaylistsURLs.compactMap { item in
@@ -274,7 +275,7 @@ final class FolderAccessManager: ObservableObject {
     }
 
         
-    func searchSongs(in songs: [MusicFile], text: String) -> [MusicFile] {
+    func searchSongs(in songs: [Track], text: String) -> [Track] {
         if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return songs
         }
@@ -341,7 +342,7 @@ final class FolderAccessManager: ObservableObject {
         return (results, playl)
     }
 
-    private func loadMetadataProgressively(for files: [MusicFile]) {
+    private func loadMetadataProgressively(for files: [Track]) {
         let maxConcurrentLoads = 4
         let publishBatchSize = 200
 
@@ -350,7 +351,7 @@ final class FolderAccessManager: ObservableObject {
             var nextIndexToSchedule = 0
             var completedCount = 0
 
-            await withTaskGroup(of: (Int, MusicFile).self) { group in
+            await withTaskGroup(of: (Int, Track).self) { group in
                 let initialTaskCount = min(maxConcurrentLoads, files.count)
 
                 for _ in 0..<initialTaskCount {
@@ -389,7 +390,7 @@ final class FolderAccessManager: ObservableObject {
         }
     }
     
-    private static func loadMetadata(for file: MusicFile) async -> MusicFile {
+    private static func loadMetadata(for file: Track) async -> Track {
         var updatedFile = file
         let asset = AVURLAsset(url: file.url)
         

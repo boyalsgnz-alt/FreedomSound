@@ -45,26 +45,22 @@ enum RepeatMode {
     }
 }
 
-final class PlaylistQueue {
-    
-}
-
 @MainActor
 final class PlaybackQueue {
-    private let libraryProvider: () -> [MusicFile]
-    private(set) var currentSongID: MusicFile.ID?
-    private var history: [MusicFile.ID] = []
-    private var shufflePath: [MusicFile.ID] = []
+    private let libraryProvider: () -> [Track]
+    private(set) var currentSongID: Track.ID?
+    private var history: [Track.ID] = []
+    private var shufflePath: [Track.ID] = []
     private var shuffleIndex: Int?
 
     var isShuffleOn = false
     var repeatMode: RepeatMode = .off
 
-    init(libraryProvider: @escaping () -> [MusicFile]) {
+    init(libraryProvider: @escaping () -> [Track]) {
         self.libraryProvider = libraryProvider
     }
 
-    var currentFile: MusicFile? {
+    var currentFile: Track? {
         guard let currentSongID else { return nil }
         return libraryProvider().first(where: { $0.id == currentSongID })
     }
@@ -92,7 +88,7 @@ final class PlaybackQueue {
         }
     }
 
-    func select(_ file: MusicFile) {
+    func select(_ file: Track) {
         pushCurrentSongIfNeeded(beforeSelecting: file)
         currentSongID = file.id
 
@@ -103,7 +99,7 @@ final class PlaybackQueue {
         }
     }
 
-    func nextFile(autoAdvance: Bool) -> MusicFile? {
+    func nextFile(autoAdvance: Bool) -> Track? {
         let files = libraryProvider()
         guard !files.isEmpty else { return nil }
 
@@ -121,7 +117,7 @@ final class PlaybackQueue {
             return currentFile
         }
 
-        let nextFile: MusicFile?
+        let nextFile: Track?
         if isShuffleOn {
             nextFile = shuffledSuccessor(from: files, currentFile: currentFile)
         } else {
@@ -139,7 +135,7 @@ final class PlaybackQueue {
         return nextFile
     }
 
-    func previousFile(currentPlaybackTime: TimeInterval) -> MusicFile? {
+    func previousFile(currentPlaybackTime: TimeInterval) -> Track? {
         let files = libraryProvider()
         guard !files.isEmpty else { return nil }
 
@@ -180,10 +176,10 @@ final class PlaybackQueue {
     }
 
     private func sequentialSuccessor(
-        from files: [MusicFile],
+        from files: [Track],
         currentIndex: Int,
         autoAdvance: Bool
-    ) -> MusicFile? {
+    ) -> Track? {
         let nextIndex = currentIndex + 1
 
         if nextIndex < files.count {
@@ -197,14 +193,14 @@ final class PlaybackQueue {
         return files.first
     }
 
-    private func randomSuccessor(from files: [MusicFile], currentFile: MusicFile) -> MusicFile? {
+    private func randomSuccessor(from files: [Track], currentFile: Track) -> Track? {
         guard files.count > 1 else { return currentFile }
 
         let candidates = files.filter { $0.id != currentFile.id }
         return candidates.randomElement() ?? currentFile
     }
 
-    private func shuffledSuccessor(from files: [MusicFile], currentFile: MusicFile) -> MusicFile? {
+    private func shuffledSuccessor(from files: [Track], currentFile: Track) -> Track? {
         if let shuffleIndex, shuffleIndex + 1 < shufflePath.count {
             let nextSongID = shufflePath[shuffleIndex + 1]
             if let nextFile = files.first(where: { $0.id == nextSongID }) {
@@ -223,7 +219,7 @@ final class PlaybackQueue {
         return randomNextFile
     }
 
-    private func shuffledPredecessor(from files: [MusicFile]) -> MusicFile? {
+    private func shuffledPredecessor(from files: [Track]) -> Track? {
         guard let shuffleIndex, shuffleIndex > 0 else {
             return currentFile
         }
@@ -238,13 +234,13 @@ final class PlaybackQueue {
         return previousFile
     }
 
-    private func pushCurrentSongIfNeeded(beforeSelecting file: MusicFile) {
+    private func pushCurrentSongIfNeeded(beforeSelecting file: Track) {
         guard let currentSongID, currentSongID != file.id else { return }
         history.append(currentSongID)
         trimHistoryIfNeeded()
     }
 
-    private func appendToShufflePath(fileID: MusicFile.ID) {
+    private func appendToShufflePath(fileID: Track.ID) {
         if let shuffleIndex, shuffleIndex < shufflePath.count - 1 {
             shufflePath.removeSubrange((shuffleIndex + 1)..<shufflePath.count)
         }
@@ -269,6 +265,107 @@ final class PlaybackQueue {
     }
 }
 
+class AudioEngine: NSObject, ObservableObject, AVAudioPlayerDelegate {
+    @Published var player: AVAudioPlayer?
+    @Published var isPlaying = false
+    @Published var currentTime: Double = 0
+    @Published var duration: Double = 0
+    
+    var cancellables = Set<AnyCancellable>()
+    
+    init(playbackQueue: PlaybackQueuee) {
+        super.init()
+        setupAudioSession()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
+        
+        playbackQueue.$currentTrack
+                .sink { [weak self] track in
+                    self?.play(track: track)
+                }
+                .store(in: &cancellables)
+    }
+    
+    private func setupAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+            print("setupAudioSession ended successfully")
+        } catch {
+            print("Failed to set audio session category: \(error)")
+        }
+    }
+    
+    @objc
+    func handleInterruption(notification: Notification) {
+        guard
+            let userInfo = notification.userInfo,
+            let interruptionTypeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+            let interruptionType = AVAudioSession.InterruptionType(rawValue: interruptionTypeValue)
+        else {
+            return
+        }
+
+        switch interruptionType {
+        case .began:
+            pause()
+        case .ended:
+            let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                resume()
+            }
+        @unknown default:
+            break
+        }
+    }
+    
+    func seek(to time: TimeInterval) {
+        guard let player else { return }
+
+        let clampedTime = max(0, min(time, player.duration))
+        player.currentTime = clampedTime
+        currentTime = clampedTime
+        duration = player.duration
+    }
+    
+    func play(track: Track?) {
+        do {
+            guard let track else { return }
+            let newPlayer = try AVAudioPlayer(contentsOf: track.url)
+            newPlayer.delegate = self
+            newPlayer.prepareToPlay()
+            
+            guard newPlayer.play() else {
+                return
+            }
+            player = newPlayer
+            currentTime = newPlayer.currentTime
+            duration = newPlayer.duration
+            isPlaying = true
+        } catch {
+            print(error)
+        }
+    }
+    
+    func pause() {
+        guard let player else { return }
+        player.pause()
+        isPlaying = false
+    }
+    
+    func resume() {
+        guard let player else { return }
+        guard player.play() else { return }
+        isPlaying = true
+    }
+    
+}
+
 @MainActor
 final class AudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
     private var queue: PlaybackQueue
@@ -280,7 +377,7 @@ final class AudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published var isPlaying = false {
         didSet { updateLockScreenInfo() }
     }
-    @Published var currentFile: MusicFile?
+    @Published var currentFile: Track?
     @Published var isShuffleOn = false {
         didSet { queue.setShuffleEnabled(isShuffleOn) }
     }
@@ -293,7 +390,7 @@ final class AudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published var duration: Double = 0
     @Published var isScrubbing = false
     
-    var currentQueueSongID: MusicFile.ID? {
+    var currentQueueSongID: Track.ID? {
         queue.currentSongID
     }
 
@@ -310,13 +407,13 @@ final class AudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
         )
     }
     
-    func setNewQueue(playlist: [MusicFile]) -> Void {
+    func setNewQueue(playlist: [Track]) -> Void {
         self.queue = PlaybackQueue(libraryProvider: { playlist })
         self.queue.setShuffleEnabled(isShuffleOn)
         self.queue.repeatMode = repeatMode
     }
 
-    func play(file: MusicFile, updateQueueSelection: Bool = true) {
+    func play(file: Track, updateQueueSelection: Bool = true) {
         do {
             if !isAudioSessionConfigured {
                 setupAudioSession()
@@ -332,10 +429,10 @@ final class AudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
             }
 
             player = newPlayer
-            if updateQueueSelection {
-                queue.select(file)
-            }
-            currentFile = file
+//            if updateQueueSelection {
+//                queue.select(file)
+//            }
+//            currentFile = file
             currentTime = newPlayer.currentTime
             duration = newPlayer.duration
             isPlaying = true
@@ -479,7 +576,7 @@ final class AudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
         progressTask = nil
     }
 
-    private func startArtworkLoad(for file: MusicFile) {
+    private func startArtworkLoad(for file: Track) {
         artworkTask?.cancel()
 
         let cachedArtwork = ArtworkLoader.shared.cachedImage(for: file.url)
