@@ -9,9 +9,8 @@ import SwiftUI
 import AVFoundation
 
 struct FloatingPlayerView: View {
-//    @EnvironmentObject var audioPlayer: AudioPlayer
     @EnvironmentObject var audioEngine: AudioEngine
-    @EnvironmentObject var playbackMgr: PlaybackQueuee
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     @State private var loadTask: Task<Void, Never>?
     @State private var showingFullPlayer = false
     @State private var artwork: UIImage?

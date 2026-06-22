@@ -10,11 +10,8 @@ import AVFoundation
 
 @main
 struct FreedomSoundApp: App {
-//    @StateObject private var audioPlayer: AudioPlayer
-    
-    /* NEW CODE */
     @StateObject private var folderManager: FolderManager
-    @StateObject private var playbackManager: PlaybackQueuee
+    @StateObject private var playbackManager: PlaybackQueue
     @StateObject private var libraryStore: LibraryStore
     @StateObject private var audioEngine: AudioEngine
     private let scanner = LibraryScanner()
@@ -22,14 +19,12 @@ struct FreedomSoundApp: App {
     private let lockScreen: LockScreenManager
     
     private let coordinator: LibraryCoordinator
-    /* END OF NEW CODE */
     let notificationDelegate = NotificationDelegate()
     
     init() {
-        /* NEW CODE */
         let libraryStore = LibraryStore()
         let folderManager = FolderManager()
-        let playbackManager = PlaybackQueuee()
+        let playbackManager = PlaybackQueue()
         let audioEngine = AudioEngine(playbackQueue: playbackManager)
         
         self.coordinator = LibraryCoordinator(
@@ -49,9 +44,7 @@ struct FreedomSoundApp: App {
         audioEngine.onTrackFinished = { [weak playbackManager] in
             playbackManager?.nextTrack()
         }
-        /* END OF NEW CODE */
         _audioEngine = StateObject(wrappedValue: audioEngine)
-//        _audioPlayer = StateObject(wrappedValue: AudioPlayer(folderAccessManager: manager))
         
         UNUserNotificationCenter.current().delegate = notificationDelegate
         requestNotificationPermission()
@@ -62,14 +55,10 @@ struct FreedomSoundApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(folderManager)
-//                .environmentObject(audioPlayer)
                 .environmentObject(libraryStore)
                 .environmentObject(playbackManager)
                 .environmentObject(audioEngine)
                 .task(id: folderManager.musicFolder) {
-                    /* Needs this line to load songs, old system */
-                    // folderAccessManager.scanFolder()
-                    /* End of old system */
                     guard folderManager.musicFolder != nil else { return }
                     await coordinator.loadLibrary()
                 }

@@ -8,7 +8,7 @@
 import Combine
 import Foundation
 
-final class PlaybackQueuee: ObservableObject {
+final class PlaybackQueue: ObservableObject {
     @Published var playlistTracks: [Track]
     @Published var playlistTracksShuffled: [Track]
     @Published var currentPlaylist: Playlist?

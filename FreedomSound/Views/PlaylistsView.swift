@@ -48,7 +48,7 @@ struct RowButtonTest<Content: View>: View {
 
 struct PlaylistsView: View {
     @EnvironmentObject var libraryStore: LibraryStore
-    @EnvironmentObject var playbackMgr: PlaybackQueuee
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     @Binding var navPath: NavigationPath
     
     var body: some View {
@@ -63,7 +63,6 @@ struct PlaylistsView: View {
                             playlist.trackFileNames.contains($0.fileName)
                         }
                         playbackMgr.setNewPlaylist(playlist: playlist, tracks: tracks)
-                        // manager.selectPlaylist(playlist)
                         navPath.append(playlist)
                     } content: {
                         HStack {

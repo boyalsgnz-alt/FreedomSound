@@ -12,14 +12,14 @@ import Combine
 final class LibraryCoordinator {
     let libScanner: LibraryScanner
     let folderMgr: FolderManager
-    let playbackMgr: PlaybackQueuee
+    let playbackMgr: PlaybackQueue
     let metadataParser: MetadataParser
     let libStore: LibraryStore
     let audioEngine: AudioEngine
     
     var cancellables = Set<AnyCancellable>()
     
-    init(libScanner: LibraryScanner, folderMgr: FolderManager, playbackMgr: PlaybackQueuee, metadataParser: MetadataParser, libraryStore: LibraryStore, audioEngine: AudioEngine) {
+    init(libScanner: LibraryScanner, folderMgr: FolderManager, playbackMgr: PlaybackQueue, metadataParser: MetadataParser, libraryStore: LibraryStore, audioEngine: AudioEngine) {
         self.libScanner = libScanner
         self.folderMgr = folderMgr
         self.playbackMgr = playbackMgr

@@ -60,7 +60,7 @@ class AudioEngine: NSObject, ObservableObject, AVAudioPlayerDelegate {
     
     private var isAudioSessionConfigured: Bool = false
     
-    init(playbackQueue: PlaybackQueuee) {
+    init(playbackQueue: PlaybackQueue) {
         super.init()
         NotificationCenter.default.addObserver(
             self,

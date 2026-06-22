@@ -9,11 +9,11 @@ import MediaPlayer
 import Combine
 
 class LockScreenManager {
-    private let playbackQueue: PlaybackQueuee
+    private let playbackQueue: PlaybackQueue
     private let audioEngine: AudioEngine
     private var cancellables = Set<AnyCancellable>()
     
-    init(playbackQueue: PlaybackQueuee, audioEngine: AudioEngine) {
+    init(playbackQueue: PlaybackQueue, audioEngine: AudioEngine) {
         self.playbackQueue = playbackQueue
         self.audioEngine = audioEngine
         setupRemoteTransportControls()

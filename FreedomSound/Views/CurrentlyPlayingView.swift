@@ -11,9 +11,8 @@ import AVFoundation
 struct CurrentlyPlayingView: View {
     @State private var loadTask: Task<Void, Never>?
     @Binding var isToggled: Bool
-//    @EnvironmentObject var audioPlayer: AudioPlayer
     @EnvironmentObject var audioEngine: AudioEngine
-    @EnvironmentObject var playbackMgr: PlaybackQueuee
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     @State private var isEditingSlider = false
     @State private var artwork: UIImage?
     

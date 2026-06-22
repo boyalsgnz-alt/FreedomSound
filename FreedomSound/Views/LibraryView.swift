@@ -11,7 +11,7 @@ struct LibraryView: View {
     @State private var showingFolderPicker = false
     @State private var navPath = NavigationPath()
     @EnvironmentObject var libraryStore: LibraryStore
-    @EnvironmentObject var playbackMgr: PlaybackQueuee
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     
     @State private var items = ["All Songs", "Playlists"]
     

@@ -10,13 +10,11 @@ import AVFoundation
 import MediaPlayer
 
 struct SongListView: View {
-    @EnvironmentObject var playbackMgr: PlaybackQueuee
-//    @EnvironmentObject var audioPlayer: AudioPlayer
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     @State private var showSearch = false
     
     @State var query: String = ""
     let title: String
-    // let songs: [Track]
     
     private var filteredSongs: [Track] {
         playbackMgr.searchTracks(query: query)
