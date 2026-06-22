@@ -20,50 +20,52 @@ struct SongListView: View {
     }
     
     var body: some View {
-        if filteredSongs.isEmpty {
-            VStack(spacing: 0) {
-                Spacer()
-                Text("No song found")
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-        } else {
-            ScrollViewReader { proxy in
-                List() {
-                    ForEach(filteredSongs) { file in
-                        RowButton(minHeight: 30) {
-                            playbackMgr.setCurrentTrack(track: file)
-                        } content: {
-                            MusicRowView(file: file)
-                        }.id(file.id)
+        Group {
+            if filteredSongs.isEmpty {
+                VStack(spacing: 0) {
+                    Spacer()
+                    Text("No song found")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+            } else {
+                ScrollViewReader { proxy in
+                    List() {
+                        ForEach(filteredSongs) { file in
+                            Button {
+                                playbackMgr.setCurrentTrack(track: file)
+                            } label: {
+                                MusicRowView(file: file)
+                            }.id(file.id)
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
                     }
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
-                }
-                .listRowSpacing(16)
-                .listStyle(.plain)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 0)
-                .searchable(text: $query)
-                .safeAreaInset(edge: .bottom) {
-                    Color.clear.frame(height: floatingPlayerHeight)
-                }
-                .navigationTitle(playbackMgr.currentPlaylist!.name)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            withAnimation {
-                                if let first = filteredSongs.first {
-                                    proxy.scrollTo(first.id, anchor: .top)
+                    .listRowSpacing(16)
+                    .listStyle(.plain)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 0)
+                    .safeAreaInset(edge: .bottom) {
+                        Color.clear.frame(height: floatingPlayerHeight)
+                    }
+                    .navigationTitle(playbackMgr.currentPlaylist!.name)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
+                                withAnimation {
+                                    if let first = filteredSongs.first {
+                                        proxy.scrollTo(first.id, anchor: .top)
+                                    }
                                 }
+                            } label: {
+                                Image(systemName: "arrow.up")
                             }
-                        } label: {
-                            Image(systemName: "arrow.up")
                         }
                     }
                 }
             }
         }
+        .searchable(text: $query)
     }
 }
 
