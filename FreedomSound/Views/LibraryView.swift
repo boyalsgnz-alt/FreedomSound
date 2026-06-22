@@ -10,8 +10,8 @@ import SwiftUI
 struct LibraryView: View {
     @State private var showingFolderPicker = false
     @State private var navPath = NavigationPath()
-    @EnvironmentObject var manager: FolderAccessManager
-    @EnvironmentObject var router: Router
+    @EnvironmentObject var libraryStore: LibraryStore
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     
     @State private var items = ["All Songs", "Playlists"]
     
@@ -26,8 +26,10 @@ struct LibraryView: View {
                     switch item {
                     case "All Songs":
                         SongListView(
-                            title: "All Songs",
-                            songs: manager.musicFiles)
+                            title: "All Songs")
+                        .onAppear() {
+                            playbackMgr.setAllSongs(tracks: libraryStore.tracks)
+                        }
                     case "Playlists":
                         PlaylistsView(navPath: $navPath)
                     default:

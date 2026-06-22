@@ -9,20 +9,22 @@ import SwiftUI
 import AVFoundation
 
 struct FloatingPlayerView: View {
-    @EnvironmentObject var audioPlayer: AudioPlayer
+    @EnvironmentObject var audioEngine: AudioEngine
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     @State private var loadTask: Task<Void, Never>?
     @State private var showingFullPlayer = false
+    @State private var artwork: UIImage?
 
     var body: some View {
         HStack(spacing: 12) {
             Button {
-                if audioPlayer.isPlaying {
-                    audioPlayer.pause()
+                if audioEngine.isPlaying {
+                    audioEngine.pause()
                 } else {
-                    audioPlayer.resume()
+                    audioEngine.resume()
                 }
             } label: {
-                Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
+                Image(systemName: audioEngine.isPlaying ? "pause.fill" : "play.fill")
                     .font(.title3)
                     .frame(width: 36, height: 36)
                     .background {
@@ -33,11 +35,11 @@ struct FloatingPlayerView: View {
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(audioPlayer.currentFile!.title)
+                Text(playbackMgr.currentTrack!.title)
                     .font(.system(size: 14, weight: .semibold))
                     .lineLimit(1)
 
-                Text(audioPlayer.currentFile!.artist)
+                Text(playbackMgr.currentTrack!.artist)
                     .font(.system(size: 13, weight: .light))
                     .lineLimit(1)
             }
@@ -45,7 +47,7 @@ struct FloatingPlayerView: View {
             Spacer()
 
             Group {
-                if let artwork = audioPlayer.currentArtworkSmall {
+                if let artwork = artwork {
                     Image(uiImage: artwork)
                         .resizable()
                         .scaledToFill()
@@ -76,6 +78,23 @@ struct FloatingPlayerView: View {
                 .stroke(.white.opacity(0.2), lineWidth: 1)
         }
         .shadow(radius: 8)
+        .task(id: playbackMgr.currentTrack!.url) {
+
+            if let cached = ArtworkLoader.shared.cachedImage(for: playbackMgr.currentTrack!.url, fullSize: false) {
+                artwork = cached
+                return
+            }
+
+            let task = Task {
+                let image = await ArtworkLoader.shared.loadArtwork(for: playbackMgr.currentTrack!.url, fullSize: false).value
+                if !Task.isCancelled {
+                    artwork = image
+                }
+            }
+
+            loadTask = task
+            await task.value
+        }
     }
 }
 

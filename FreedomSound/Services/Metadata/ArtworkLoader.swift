@@ -12,48 +12,57 @@ import ImageIO
 final class ArtworkLoader {
     static let shared = ArtworkLoader()
 
-    private let cache = NSCache<NSURL, UIImage>()
-    private var runningTasks: [URL: Task<UIImage?, Never>] = [:]
+    private let cache = NSCache<NSURL, NSData>()
     private let lock = NSLock()
 
-    func cachedImage(for url: URL) -> UIImage? {
-        cache.object(forKey: url as NSURL)
+    private struct TaskKey: Hashable {
+        let url: URL
+        let fullSize: Bool
+    }
+    private var runningTasks: [TaskKey: Task<UIImage?, Never>] = [:]
+
+    func cachedImage(for url: URL, fullSize: Bool) -> UIImage? {
+        guard let data = cache.object(forKey: url as NSURL) as Data? else { return nil }
+        if fullSize { return UIImage(data: data) }
+        return Self.downsampleArtwork(data: data, maxPixelSize: 120)
     }
 
     func loadArtwork(for url: URL, fullSize: Bool) -> Task<UIImage?, Never> {
-        if let cached = cache.object(forKey: url as NSURL), !fullSize {
-            return Task { cached }
-        }
+        if let cachedData = cache.object(forKey: url as NSURL) as Data? {
+                if fullSize { return Task { UIImage(data: cachedData) } }
+                return Task { ArtworkLoader.downsampleArtwork(data: cachedData, maxPixelSize: 120) }
+            }
 
         lock.lock()
-        if let existing = runningTasks[url] {
+        if let existing = runningTasks[TaskKey(url: url, fullSize: fullSize)] {
             lock.unlock()
             return existing
         }
 
         let task = Task(priority: .utility) { [weak self] () -> UIImage? in
             defer {
-                self?.lock.lock()
-                self?.runningTasks[url] = nil
-                self?.lock.unlock()
+                self?.lock.withLock {
+                    self?.runningTasks[TaskKey(url: url, fullSize: fullSize)] = nil
+                }
             }
-
-            let image = await Self.extractArtwork(from: url, fullSize: fullSize)
-            if let image {
-                self?.cache.setObject(image, forKey: url as NSURL)
+            guard let data = await Self.extractArtwork(from: url, fullSize: fullSize) as Data? else {
+                return nil
             }
-            return image
+            self?.cache.setObject(data as NSData, forKey: url as NSURL)
+            if fullSize {
+                return UIImage(data: data)
+            }
+            return Self.downsampleArtwork(data: data, maxPixelSize: 120)
         }
 
-        runningTasks[url] = task
+        runningTasks[TaskKey(url: url, fullSize: fullSize)] = task
         lock.unlock()
 
         return task
     }
 
-    private static func extractArtwork(from url: URL, fullSize: Bool) async -> UIImage? {
+    private static func extractArtwork(from url: URL, fullSize: Bool) async -> NSData? {
         let asset = AVURLAsset(url: url)
-
         do {
             let metadata = try await asset.load(.commonMetadata)
 
@@ -65,11 +74,9 @@ final class ArtworkLoader {
                 return nil
             }
 
-            if fullSize {
-                return UIImage(data: artworkData)
-            }
-            return downsampleArtwork(data: artworkData, maxPixelSize: 120)
+            return artworkData as NSData
         } catch {
+            print("Artwork load failed: \(error.localizedDescription)")
             return nil
         }
     }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MusicRowView: View {
-    let file: MusicFile
+    let file: Track
 
     @State private var artwork: UIImage?
     @State private var loadTask: Task<Void, Never>?
@@ -47,7 +47,7 @@ struct MusicRowView: View {
         .task(id: file.url) {
             if artwork != nil { return }
 
-            if let cached = ArtworkLoader.shared.cachedImage(for: file.url) {
+            if let cached = ArtworkLoader.shared.cachedImage(for: file.url, fullSize: false) {
                 artwork = cached
                 return
             }

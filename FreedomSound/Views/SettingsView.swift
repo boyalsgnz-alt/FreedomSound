@@ -10,7 +10,7 @@ import AVFoundation
 import MediaPlayer
 
 struct SettingsView: View {
-    @EnvironmentObject var manager: FolderAccessManager
+    @EnvironmentObject var folderMgr: FolderManager
     @State private var showingFolderPicker = false
     
     var body: some View {
@@ -28,14 +28,14 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showingFolderPicker) {
             FolderPicker { url in
-                manager.savePickedFolder(url)
-                manager.scanFolder()
+                folderMgr.savePickedFolder(url)
                 showingFolderPicker = false
             }
         }
     }
 }
 
-#Preview {
+/* #Preview {
     SettingsView()
 }
+*/

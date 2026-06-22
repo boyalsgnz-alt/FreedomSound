@@ -11,8 +11,10 @@ import AVFoundation
 struct CurrentlyPlayingView: View {
     @State private var loadTask: Task<Void, Never>?
     @Binding var isToggled: Bool
-    @EnvironmentObject var audioPlayer: AudioPlayer
+    @EnvironmentObject var audioEngine: AudioEngine
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     @State private var isEditingSlider = false
+    @State private var artwork: UIImage?
     
     func formatTime(_ time: Double) -> String {
         let totalSeconds = Int(time)
@@ -72,7 +74,7 @@ struct CurrentlyPlayingView: View {
                 Spacer()
                 
                 Group {
-                    if let artwork = audioPlayer.currentArtworkLarge {
+                    if let artwork = artwork {
                         Image(uiImage: artwork)
                             .resizable()
                             .scaledToFit()
@@ -83,7 +85,7 @@ struct CurrentlyPlayingView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .padding()
                     } else {
-                        Image("Test")
+                        Image(systemName: "music.note")
                             .resizable()
                             .scaledToFit()
                             .background(
@@ -96,31 +98,31 @@ struct CurrentlyPlayingView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(audioPlayer.currentFile!.title).font(.system(size: 20, weight: .bold))
-                    Text(audioPlayer.currentFile!.artist).font(.system(size: 16, weight: .light))
+                    Text(playbackMgr.currentTrack!.title).font(.system(size: 20, weight: .bold))
+                    Text(playbackMgr.currentTrack!.artist).font(.system(size: 16, weight: .light))
                     Slider(
                         value: Binding(
                             get: {
-                                audioPlayer.currentTime
+                                audioEngine.currentTime
                             },
                             set: { newValue in
-                                audioPlayer.currentTime = newValue
+                                audioEngine.currentTime = newValue
                             }
                         ),
-                        in: 0...(max(audioPlayer.duration, 1)),
+                        in: 0...(max(audioEngine.duration, 1)),
                         onEditingChanged: { editing in
-                            audioPlayer.isScrubbing = editing
+                            audioEngine.isScrubbing = editing
                             
                             if !editing {
-                                audioPlayer.seek(to: audioPlayer.currentTime)
+                                audioEngine.seek(to: audioEngine.currentTime)
                             }
                         }
                     )
                     
                     HStack {
-                        Text(formatTime(audioPlayer.currentTime))
+                        Text(formatTime(audioEngine.currentTime))
                         Spacer()
-                        Text(formatTime(audioPlayer.duration))
+                        Text(formatTime(audioEngine.duration))
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -129,29 +131,44 @@ struct CurrentlyPlayingView: View {
                 Spacer()
                 
                 HStack(spacing: 4) {
-                    controlButton(systemName: "shuffle", iconSize: 18, buttonSize: 44, color: audioPlayer.isShuffleOn ? .green : .white, circled: false) {
-                        audioPlayer.isShuffleOn.toggle()
+                    controlButton(systemName: "shuffle", iconSize: 18, buttonSize: 44, color: playbackMgr.isShuffled ? .green : .white, circled: false) {
+                        playbackMgr.enableShuffle()
                     }
                     controlButton(systemName: "backward.end.fill", iconSize: 32, buttonSize: 50, circled: false) {
-                        audioPlayer.prevSong()
+                        playbackMgr.prevTrack(currentTime: audioEngine.currentTime)
                     }
-                    controlButton(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill", iconSize: 40, buttonSize: 80) {
-                        if audioPlayer.isPlaying {
-                            audioPlayer.pause()
+                    controlButton(systemName: audioEngine.isPlaying ? "pause.fill" : "play.fill", iconSize: 40, buttonSize: 80) {
+                        if audioEngine.isPlaying {
+                            audioEngine.pause()
                         } else {
-                            audioPlayer.resume()
+                            audioEngine.resume()
                         }
                     }
                     controlButton(systemName: "forward.end.fill", iconSize: 32, buttonSize: 50, circled: false) {
-                        audioPlayer.nextSong()
+                        playbackMgr.nextTrack()
                     }
-                    controlButton(systemName: audioPlayer.repeatMode.iconName, iconSize: 18, buttonSize: 44, color: audioPlayer.repeatMode.color, circled: false) {
-                        audioPlayer.repeatClick()
+                    controlButton(systemName: playbackMgr.repeatMode.iconName, iconSize: 18, buttonSize: 44, color: playbackMgr.repeatMode.color, circled: false) {
+                        playbackMgr.shiftRepeatMode()
                     }
                 }
                 .padding(.horizontal, 8)
                 
                 Spacer()
+            }
+            .task(id: playbackMgr.currentTrack!.url) {
+                if let cached = ArtworkLoader.shared.cachedImage(for: playbackMgr.currentTrack!.url, fullSize: true) {
+                    artwork = cached
+                    return
+                }
+                let task = Task {
+                    let image = await ArtworkLoader.shared.loadArtwork(for: playbackMgr.currentTrack!.url, fullSize: true).value
+                    if !Task.isCancelled {
+                        artwork = image
+                    }
+                }
+
+                loadTask = task
+                await task.value
             }
         }
     }

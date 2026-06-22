@@ -10,20 +10,18 @@ import AVFoundation
 import MediaPlayer
 
 struct SongListView: View {
-    @EnvironmentObject var manager: FolderAccessManager
-    @EnvironmentObject var audioPlayer: AudioPlayer
+    @EnvironmentObject var playbackMgr: PlaybackQueue
     @State private var showSearch = false
     
     @State var query: String = ""
     let title: String
-    let songs: [MusicFile]
     
-    private var filteredSongs: [MusicFile] {
-        manager.searchSongs(in: songs, text: query)
+    private var filteredSongs: [Track] {
+        playbackMgr.searchTracks(query: query)
     }
     
     var body: some View {
-        if songs.isEmpty {
+        if filteredSongs.isEmpty {
             VStack(spacing: 0) {
                 Spacer()
                 Text("No song found")
@@ -35,8 +33,7 @@ struct SongListView: View {
                 List() {
                         ForEach(filteredSongs) { file in
                             RowButton(minHeight: 30) {
-                                audioPlayer.setNewQueue(playlist: songs)
-                                audioPlayer.play(file: file)
+                                playbackMgr.setCurrentTrack(track: file)
                             } content: {
                                 MusicRowView(file: file)
                             }.id(file.id)
@@ -50,13 +47,13 @@ struct SongListView: View {
                 .padding(.vertical, 0)
                 .searchable(text: $query)
                 .overlay(alignment: .bottom) {
-                    if audioPlayer.currentFile != nil {
+                    if playbackMgr.currentTrack != nil {
                         FloatingPlayerView()
                             .padding(.horizontal, 8)
                             .padding(.vertical, 8)
                     }
                 }
-                .navigationTitle(title)
+                .navigationTitle(playbackMgr.currentPlaylist!.name)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
@@ -75,6 +72,6 @@ struct SongListView: View {
     }
 }
 
-#Preview {
+/* #Preview {
     SongListView(title: "Songs", songs: [])
-}
+} */

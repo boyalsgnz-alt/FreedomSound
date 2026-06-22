@@ -1,14 +1,14 @@
 import Foundation
 import UIKit
 
-struct MusicFile: Identifiable, Equatable {
+struct Track: Identifiable, Equatable {
     var id: String { url.path }
     let url: URL
     let fileName: String
-
+    
     var title: String
     var artist: String
-
+    
     init(url: URL) {
         self.url = url
         self.fileName = url.lastPathComponent
