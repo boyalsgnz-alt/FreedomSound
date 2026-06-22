@@ -11,12 +11,10 @@ import Combine
 struct CountdownView: View {
     @State private var now = Date()
 
-    let installDate = UserDefaults.standard.object(forKey: "installDate") as? Date ?? Date()
     let expiryDate: Date
 
     init() {
-        let install = UserDefaults.standard.object(forKey: "installDate") as? Date ?? Date()
-        expiryDate = Calendar.current.date(byAdding: .day, value: 7, to: install)!
+        expiryDate = getProvisioningProfileExpiration() ?? Date()
     }
 
     var body: some View {

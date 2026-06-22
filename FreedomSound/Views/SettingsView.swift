@@ -15,8 +15,11 @@ struct SettingsView: View {
     
     var body: some View {
         VStack {
+            Text("Settings")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .padding(.bottom, 8)
             CountdownView()
-            Text("Settings View")
             Spacer()
             InfinityLoader()
             Spacer()
