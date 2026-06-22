@@ -77,33 +77,28 @@ class LockScreenManager {
         let engine = audioEngine
         let commandCenter = MPRemoteCommandCenter.shared()
         
-        commandCenter.playCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
+        commandCenter.playCommand.addTarget { _ in
             engine.resume()
             return .success
         }
         
-        commandCenter.pauseCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
+        commandCenter.pauseCommand.addTarget { _ in
             engine.pause()
             return .success
         }
         
-        commandCenter.nextTrackCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
+        commandCenter.nextTrackCommand.addTarget { _ in
             queue.nextTrack()
             return .success
         }
         
-        commandCenter.previousTrackCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
-            queue.prevTrack()
+        commandCenter.previousTrackCommand.addTarget { _ in
+            queue.prevTrack(currentTime: self.audioEngine.currentTime)
             return .success
         }
         
-        commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
+        commandCenter.changePlaybackPositionCommand.addTarget { event in
             guard
-                let self,
                 let event = event as? MPChangePlaybackPositionCommandEvent
             else {
                 return .commandFailed

@@ -81,7 +81,7 @@ struct FloatingPlayerView: View {
         .shadow(radius: 8)
         .task(id: playbackMgr.currentTrack!.url) {
 
-            if let cached = ArtworkLoader.shared.cachedImage(for: playbackMgr.currentTrack!.url) {
+            if let cached = ArtworkLoader.shared.cachedImage(for: playbackMgr.currentTrack!.url, fullSize: false) {
                 artwork = cached
                 return
             }

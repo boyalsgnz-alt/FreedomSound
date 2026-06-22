@@ -86,7 +86,7 @@ struct CurrentlyPlayingView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .padding()
                     } else {
-                        Image("Test")
+                        Image(systemName: "music.note")
                             .resizable()
                             .scaledToFit()
                             .background(
@@ -136,7 +136,7 @@ struct CurrentlyPlayingView: View {
                         playbackMgr.enableShuffle()
                     }
                     controlButton(systemName: "backward.end.fill", iconSize: 32, buttonSize: 50, circled: false) {
-                        playbackMgr.prevTrack()
+                        playbackMgr.prevTrack(currentTime: audioEngine.currentTime)
                     }
                     controlButton(systemName: audioEngine.isPlaying ? "pause.fill" : "play.fill", iconSize: 40, buttonSize: 80) {
                         if audioEngine.isPlaying {
@@ -157,13 +157,10 @@ struct CurrentlyPlayingView: View {
                 Spacer()
             }
             .task(id: playbackMgr.currentTrack!.url) {
-                if artwork != nil { return }
-
-//                if let cached = ArtworkLoader.shared.cachedImage(for: playbackMgr.currentTrack!.url) {
-//                    artwork = cached
-//                    return
-//                }
-
+                if let cached = ArtworkLoader.shared.cachedImage(for: playbackMgr.currentTrack!.url, fullSize: true) {
+                    artwork = cached
+                    return
+                }
                 let task = Task {
                     let image = await ArtworkLoader.shared.loadArtwork(for: playbackMgr.currentTrack!.url, fullSize: true).value
                     if !Task.isCancelled {

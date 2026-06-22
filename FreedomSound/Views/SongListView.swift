@@ -10,7 +10,6 @@ import AVFoundation
 import MediaPlayer
 
 struct SongListView: View {
-    @EnvironmentObject var manager: FolderAccessManager
     @EnvironmentObject var playbackMgr: PlaybackQueuee
 //    @EnvironmentObject var audioPlayer: AudioPlayer
     @State private var showSearch = false

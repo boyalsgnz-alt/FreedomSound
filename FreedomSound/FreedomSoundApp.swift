@@ -10,7 +10,6 @@ import AVFoundation
 
 @main
 struct FreedomSoundApp: App {
-    @StateObject private var folderAccessManager = FolderAccessManager()
 //    @StateObject private var audioPlayer: AudioPlayer
     
     /* NEW CODE */
@@ -51,8 +50,6 @@ struct FreedomSoundApp: App {
             playbackManager?.nextTrack()
         }
         /* END OF NEW CODE */
-        let manager = FolderAccessManager()
-        _folderAccessManager = StateObject(wrappedValue: manager)
         _audioEngine = StateObject(wrappedValue: audioEngine)
 //        _audioPlayer = StateObject(wrappedValue: AudioPlayer(folderAccessManager: manager))
         
@@ -64,7 +61,6 @@ struct FreedomSoundApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(folderAccessManager)
                 .environmentObject(folderManager)
 //                .environmentObject(audioPlayer)
                 .environmentObject(libraryStore)

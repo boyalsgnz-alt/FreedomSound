@@ -84,8 +84,28 @@ final class PlaybackQueuee: ObservableObject {
         }
     }
     
-    func prevTrack() {
-        
+    func prevTrack(currentTime: TimeInterval) {
+        if currentTime >= 2 {
+            currentTrack = currentTrack
+        } else {
+            switch repeatMode {
+            case .one:
+                currentTrack = currentTrack
+            case .all:
+                if currentIndex - 1 < 0 {
+                    currentIndex = activePlaylist.count - 1
+                    currentTrack = activePlaylist[currentIndex]
+                } else {
+                    currentIndex = currentIndex - 1
+                    currentTrack = activePlaylist[currentIndex]
+                }
+            case .off:
+                if currentIndex - 1 >= 0 {
+                    currentIndex = currentIndex - 1
+                    currentTrack = activePlaylist[currentIndex]
+                }
+            }
+        }
     }
     
     func searchTracks(query: String) -> [Track] {

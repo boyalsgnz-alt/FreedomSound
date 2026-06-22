@@ -10,7 +10,6 @@ import AVFoundation
 import MediaPlayer
 
 struct SettingsView: View {
-    @EnvironmentObject var manager: FolderAccessManager
     @EnvironmentObject var folderMgr: FolderManager
     @State private var showingFolderPicker = false
     
@@ -30,8 +29,6 @@ struct SettingsView: View {
         .sheet(isPresented: $showingFolderPicker) {
             FolderPicker { url in
                 folderMgr.savePickedFolder(url)
-                manager.savePickedFolder(url)
-                manager.scanFolder()
                 showingFolderPicker = false
             }
         }

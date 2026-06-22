@@ -47,7 +47,6 @@ struct RowButtonTest<Content: View>: View {
 }
 
 struct PlaylistsView: View {
-    @EnvironmentObject var manager: FolderAccessManager
     @EnvironmentObject var libraryStore: LibraryStore
     @EnvironmentObject var playbackMgr: PlaybackQueuee
     @Binding var navPath: NavigationPath
