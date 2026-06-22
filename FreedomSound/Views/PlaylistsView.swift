@@ -50,6 +50,7 @@ struct PlaylistsView: View {
     @EnvironmentObject var libraryStore: LibraryStore
     @EnvironmentObject var playbackMgr: PlaybackQueue
     @Binding var navPath: NavigationPath
+    @Binding var floatingPlayerHeight: CGFloat
     
     var body: some View {
         VStack(spacing: 0) {
@@ -83,8 +84,10 @@ struct PlaylistsView: View {
                 }
                 .listStyle(.plain)
                 .navigationDestination(for: Playlist.self) { item in
-                    SongListView(
-                        title: item.name)
+                    SongListView(floatingPlayerHeight: $floatingPlayerHeight)
+                }
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear.frame(height: floatingPlayerHeight)
                 }
                 .navigationTitle("Playlists")
             }

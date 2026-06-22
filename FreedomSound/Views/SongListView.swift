@@ -12,9 +12,8 @@ import MediaPlayer
 struct SongListView: View {
     @EnvironmentObject var playbackMgr: PlaybackQueue
     @State private var showSearch = false
-    
     @State var query: String = ""
-    let title: String
+    @Binding var floatingPlayerHeight: CGFloat
     
     private var filteredSongs: [Track] {
         playbackMgr.searchTracks(query: query)
@@ -31,12 +30,12 @@ struct SongListView: View {
         } else {
             ScrollViewReader { proxy in
                 List() {
-                        ForEach(filteredSongs) { file in
-                            RowButton(minHeight: 30) {
-                                playbackMgr.setCurrentTrack(track: file)
-                            } content: {
-                                MusicRowView(file: file)
-                            }.id(file.id)
+                    ForEach(filteredSongs) { file in
+                        RowButton(minHeight: 30) {
+                            playbackMgr.setCurrentTrack(track: file)
+                        } content: {
+                            MusicRowView(file: file)
+                        }.id(file.id)
                     }
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets())
@@ -46,12 +45,8 @@ struct SongListView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 0)
                 .searchable(text: $query)
-                .overlay(alignment: .bottom) {
-                    if playbackMgr.currentTrack != nil {
-                        FloatingPlayerView()
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 8)
-                    }
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear.frame(height: floatingPlayerHeight)
                 }
                 .navigationTitle(playbackMgr.currentPlaylist!.name)
                 .toolbar {
@@ -73,5 +68,5 @@ struct SongListView: View {
 }
 
 /* #Preview {
-    SongListView(title: "Songs", songs: [])
-} */
+ SongListView(title: "Songs", songs: [])
+ } */
