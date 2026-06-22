@@ -49,7 +49,7 @@ struct CurrentlyPlayingView: View {
             VStack(spacing: 0) {
                 // Top bar
                 ZStack {
-                    Text("Playlist Name")
+                    Text(playbackMgr.currentPlaylist?.name ?? "Playlist Name")
                         .frame(maxWidth: .infinity, alignment: .center)
                     
                     HStack {

@@ -17,11 +17,15 @@ struct LibraryView: View {
     
     var body: some View {
         NavigationStack(path: $navPath) {
-            VStack(spacing: 0) {
-                
+            VStack {
+                Text("Library")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
                 List(items, id: \.self) { item in
                     NavigationLink(item, value: item)
+                        .listRowSeparator(.hidden)
                 }
+                .listStyle(.plain)
                 .navigationDestination(for: String.self) { item in
                     switch item {
                     case "All Songs":
@@ -36,7 +40,6 @@ struct LibraryView: View {
                         Text("Unknown Destination")
                     }
                 }
-                .listStyle(.plain)
             }
         }
     }

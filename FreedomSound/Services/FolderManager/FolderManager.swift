@@ -15,7 +15,6 @@ final class FolderManager: ObservableObject {
     private let bookmarkKey = "SelectedMusicFolderBookmark"
     
     init() {
-
         restoreFolderFromBookmark()
     }
     
