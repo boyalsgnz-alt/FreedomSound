@@ -43,7 +43,6 @@ final class PlaybackQueue: ObservableObject {
         } else {
             currentIndex = playlistTracksShuffled.firstIndex(of: currentTrack!)!
         }
-        print("currentIndex is \(currentIndex)")
     }
     
     func shiftRepeatMode() {
@@ -56,7 +55,6 @@ final class PlaybackQueue: ObservableObject {
     }
     
     func nextTrack() {
-        print("playlist is \(currentPlaylist!.name), with count of \(currentPlaylist!.trackFileNames.count) tracks")
         switch repeatMode {
         case .one:
             currentTrack = currentTrack
