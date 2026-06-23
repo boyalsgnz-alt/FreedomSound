@@ -14,14 +14,44 @@ struct SettingsView: View {
     @State private var showingFolderPicker = false
     
     var body: some View {
-        VStack {
+        VStack(){
             Text("Settings")
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .padding(.bottom, 8)
-            CountdownView()
-            Spacer()
-            InfinityLoader()
+//            Spacer()
+//            InfinityLoader()
+//            Spacer()
+            Grid(horizontalSpacing: 30, verticalSpacing: 30) {
+                GridRow {
+                    CountdownView()
+                        .glassEffect(.regular.tint(Color(.sRGB, red: 177/255, green: 222/255, blue: 224/255, opacity: 1)).interactive(), in: .rect(cornerRadius: 16.0))
+                    .aspectRatio(1, contentMode: .fit)
+                    // .clipShape(RoundedRectangle(cornerRadius: 10))
+                    
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color(.sRGB, red: 150/255, green: 209/255, blue: 212/255, opacity: 1))
+                        }
+                        .aspectRatio(1, contentMode: .fit)
+                }
+                
+                GridRow {
+                    Rectangle().fill(Color.blue)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .aspectRatio(1, contentMode: .fit)
+                    
+                    Rectangle().background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.blue)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .aspectRatio(1, contentMode: .fit)
+                }
+            }
+            .padding(8)
             Spacer()
             Button {
                 showingFolderPicker.toggle()
@@ -35,6 +65,7 @@ struct SettingsView: View {
                 showingFolderPicker = false
             }
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
