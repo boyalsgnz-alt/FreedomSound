@@ -12,66 +12,63 @@ import MediaPlayer
 struct SongListView: View {
     @EnvironmentObject var playbackMgr: PlaybackQueue
     @State private var showSearch = false
-    
     @State var query: String = ""
-    let title: String
+    @Binding var floatingPlayerHeight: CGFloat
     
     private var filteredSongs: [Track] {
         playbackMgr.searchTracks(query: query)
     }
     
     var body: some View {
-        if filteredSongs.isEmpty {
-            VStack(spacing: 0) {
-                Spacer()
-                Text("No song found")
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-        } else {
-            ScrollViewReader { proxy in
-                List() {
+        Group {
+            if filteredSongs.isEmpty {
+                VStack(spacing: 0) {
+                    Spacer()
+                    Text("No song found")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+            } else {
+                ScrollViewReader { proxy in
+                    List() {
                         ForEach(filteredSongs) { file in
-                            RowButton(minHeight: 30) {
+                            Button {
                                 playbackMgr.setCurrentTrack(track: file)
-                            } content: {
+                            } label: {
                                 MusicRowView(file: file)
                             }.id(file.id)
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
                     }
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
-                }
-                .listRowSpacing(16)
-                .listStyle(.plain)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 0)
-                .searchable(text: $query)
-                .overlay(alignment: .bottom) {
-                    if playbackMgr.currentTrack != nil {
-                        FloatingPlayerView()
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 8)
+                    .listRowSpacing(16)
+                    .listStyle(.plain)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 0)
+                    .safeAreaInset(edge: .bottom) {
+                        Color.clear.frame(height: floatingPlayerHeight)
                     }
-                }
-                .navigationTitle(playbackMgr.currentPlaylist!.name)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            withAnimation {
-                                if let first = filteredSongs.first {
-                                    proxy.scrollTo(first.id, anchor: .top)
+                    .navigationTitle(playbackMgr.currentPlaylist!.name)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
+                                withAnimation {
+                                    if let first = filteredSongs.first {
+                                        proxy.scrollTo(first.id, anchor: .top)
+                                    }
                                 }
+                            } label: {
+                                Image(systemName: "arrow.up")
                             }
-                        } label: {
-                            Image(systemName: "arrow.up")
                         }
                     }
                 }
             }
         }
+        .searchable(text: $query)
     }
 }
 
 /* #Preview {
-    SongListView(title: "Songs", songs: [])
-} */
+ SongListView(title: "Songs", songs: [])
+ } */

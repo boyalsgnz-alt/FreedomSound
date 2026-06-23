@@ -28,7 +28,7 @@ func scheduleExpiryReminder() {
     let center = UNUserNotificationCenter.current()
     center.removeAllPendingNotificationRequests()
 
-    let installDate = UserDefaults.standard.object(forKey: "installDate") as? Date ?? Date()
+    let installDate = getProvisioningProfileExpiration() ?? Date()
     
     if UserDefaults.standard.object(forKey: "installDate") == nil {
         UserDefaults.standard.set(Date(), forKey: "installDate")
@@ -55,4 +55,32 @@ func scheduleExpiryReminder() {
     )
 
     center.add(request)
+}
+
+func getProvisioningProfileExpiration() -> Date? {
+    guard let profilePath = Bundle.main.path(forResource: "embedded", ofType: "mobileprovision"),
+          let profileData = try? Data(contentsOf: URL(fileURLWithPath: profilePath)) else {
+        return nil
+    }
+
+    let xmlStart = Data("<?xml".utf8)
+    let xmlEnd = Data("</plist>".utf8)
+
+    guard let startRange = profileData.range(of: xmlStart),
+          let endRange = profileData.range(of: xmlEnd) else {
+        return nil
+    }
+
+    let plistData = profileData[startRange.lowerBound ..< endRange.upperBound]
+
+    guard let plist = try? PropertyListSerialization.propertyList(
+              from: plistData,
+              options: [],
+              format: nil
+          ) as? [String: Any],
+          let expirationDate = plist["ExpirationDate"] as? Date else {
+        return nil
+    }
+
+    return expirationDate
 }

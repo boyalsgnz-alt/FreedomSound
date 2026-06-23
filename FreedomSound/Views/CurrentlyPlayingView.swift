@@ -42,14 +42,12 @@ struct CurrentlyPlayingView: View {
     
     var body: some View {
         ZStack {
-            // Full-screen background
-            Color(hue: 0.5, saturation: 0.1, brightness: 0.1)
-                .ignoresSafeArea()
+            KMeansGradientBackground(artwork: artwork)
             
             VStack(spacing: 0) {
                 // Top bar
                 ZStack {
-                    Text("Playlist Name")
+                    Text(playbackMgr.currentPlaylist?.name ?? "Playlist Name")
                         .frame(maxWidth: .infinity, alignment: .center)
                     
                     HStack {
@@ -57,13 +55,11 @@ struct CurrentlyPlayingView: View {
                             isToggled.toggle()
                         } label: {
                             Image(systemName: "chevron.down")
-                                .font(.title3)
-                                .frame(width: 36, height: 36)
-                                .background {
-                                    Circle()
-                                        .fill(.gray.opacity(0.2))
-                                }
-                                .foregroundStyle(.gray)
+                                .font(.system(size: 19, weight: .bold))
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                                //.foregroundStyle(.gray)
+                                .glassEffect(.regular, in: .capsule)
                         }
                         .padding()
                         
