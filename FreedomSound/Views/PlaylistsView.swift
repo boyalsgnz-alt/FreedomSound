@@ -60,10 +60,6 @@ struct PlaylistsView: View {
             } else {
                 List(libraryStore.playlists, id: \.id) { playlist in
                     RowButtonTest(minHeight: 20) {
-                        let tracks = libraryStore.tracks.filter {
-                            playlist.trackFileNames.contains($0.fileName)
-                        }
-                        playbackMgr.setNewPlaylist(playlist: playlist, tracks: tracks)
                         navPath.append(playlist)
                     } content: {
                         HStack {
@@ -84,7 +80,7 @@ struct PlaylistsView: View {
                 }
                 .listStyle(.plain)
                 .navigationDestination(for: Playlist.self) { item in
-                    SongListView(floatingPlayerHeight: $floatingPlayerHeight)
+                    SongListView(floatingPlayerHeight: $floatingPlayerHeight, playlist: item)
                 }
                 .safeAreaInset(edge: .bottom) {
                     Color.clear.frame(height: floatingPlayerHeight)

@@ -17,6 +17,15 @@ struct LibraryView: View {
     
     @State private var items = ["All Songs", "Playlists"]
     
+    private func allSongsPlaylist() -> Playlist {
+        Playlist(
+            id: "allsongs",
+            name: "All Songs",
+            sourceURL: nil,
+            trackFileNames: libraryStore.tracks.map { $0.fileName }
+        )
+    }
+    
     var body: some View {
         NavigationStack(path: $navPath) {
             VStack {
@@ -31,10 +40,7 @@ struct LibraryView: View {
                 .navigationDestination(for: String.self) { item in
                     switch item {
                     case "All Songs":
-                        SongListView(floatingPlayerHeight: $floatingPlayerHeight)
-                            .onAppear() {
-                                playbackMgr.setAllSongs(tracks: libraryStore.tracks)
-                            }
+                        SongListView(floatingPlayerHeight: $floatingPlayerHeight, playlist: allSongsPlaylist())
                     case "Playlists":
                         PlaylistsView(navPath: $navPath, floatingPlayerHeight: $floatingPlayerHeight)
                     default:

@@ -28,31 +28,22 @@ final class PlaybackQueue: ObservableObject {
     func setNewPlaylist(playlist: Playlist, tracks: [Track]) {
         playlistTracks = tracks
         currentPlaylist = playlist
-    }
-    
-    func setAllSongs(tracks: [Track]) {
-        guard !tracks.isEmpty else { return }
-            let playlist = Playlist(
-                id: "allsongs",
-                name: "All Songs",
-                sourceURL: nil,
-                trackFileNames: tracks.map { $0.fileName }
-            )
-            setNewPlaylist(playlist: playlist, tracks: tracks)
+        playlistTracksShuffled = playlistTracks.shuffled()
+        currentIndex = 0
     }
     
     var activePlaylist: [Track] {
-        isShuffled ? playlistTracksShuffled : playlistTracks
+        return isShuffled ? playlistTracksShuffled : playlistTracks
     }
     
     func enableShuffle() {
-        if (!isShuffled) {
-            var remaining = playlistTracks.filter { $0 != currentTrack! }
-            remaining.shuffle()
-            playlistTracksShuffled = [currentTrack!] + remaining
-            currentIndex = 0
-        }
         isShuffled.toggle()
+        if (!isShuffled) {
+            currentIndex = playlistTracks.firstIndex(of: currentTrack!)!
+        } else {
+            currentIndex = playlistTracksShuffled.firstIndex(of: currentTrack!)!
+        }
+        print("currentIndex is \(currentIndex)")
     }
     
     func shiftRepeatMode() {
@@ -60,11 +51,12 @@ final class PlaybackQueue: ObservableObject {
     }
     
     func setCurrentTrack(track: Track) {
-        currentIndex = playlistTracks.firstIndex(of: track)!
-        currentTrack = playlistTracks[currentIndex]
+        currentIndex = activePlaylist.firstIndex(of: track)!
+        currentTrack = activePlaylist[currentIndex]
     }
     
     func nextTrack() {
+        print("playlist is \(currentPlaylist!.name), with count of \(currentPlaylist!.trackFileNames.count) tracks")
         switch repeatMode {
         case .one:
             currentTrack = currentTrack
@@ -107,16 +99,4 @@ final class PlaybackQueue: ObservableObject {
             }
         }
     }
-    
-    func searchTracks(query: String) -> [Track] {
-        if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return playlistTracks
-        }
-        
-        return playlistTracks.filter {
-            $0.title.localizedCaseInsensitiveContains(query) ||
-            $0.artist.localizedCaseInsensitiveContains(query)
-        }
-    }
-    
 }

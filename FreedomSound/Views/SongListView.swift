@@ -11,12 +11,28 @@ import MediaPlayer
 
 struct SongListView: View {
     @EnvironmentObject var playbackMgr: PlaybackQueue
+    @EnvironmentObject var libraryStore: LibraryStore
+    
     @State private var showSearch = false
     @State var query: String = ""
     @Binding var floatingPlayerHeight: CGFloat
     
+    let playlist: Playlist
+    
+    var tracks: [Track] {
+        playlist.trackFileNames.compactMap { fileName in
+            libraryStore.tracks.first { $0.fileName == fileName }
+        }
+    }
+    
     private var filteredSongs: [Track] {
-        playbackMgr.searchTracks(query: query)
+        if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return tracks
+        }
+        return tracks.filter {
+            $0.title.localizedCaseInsensitiveContains(query) ||
+            $0.artist.localizedCaseInsensitiveContains(query)
+        }
     }
     
     var body: some View {
@@ -33,6 +49,10 @@ struct SongListView: View {
                     List() {
                         ForEach(filteredSongs) { file in
                             Button {
+                                let filteredTracks = playlist.trackFileNames.compactMap { fileName in
+                                    libraryStore.tracks.first { $0.fileName == fileName }
+                                }
+                                playbackMgr.setNewPlaylist(playlist: playlist, tracks: filteredTracks)
                                 playbackMgr.setCurrentTrack(track: file)
                             } label: {
                                 MusicRowView(file: file)
@@ -48,7 +68,7 @@ struct SongListView: View {
                     .safeAreaInset(edge: .bottom) {
                         Color.clear.frame(height: floatingPlayerHeight)
                     }
-                    .navigationTitle(playbackMgr.currentPlaylist!.name)
+                    .navigationTitle(playlist.name)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             Button {
