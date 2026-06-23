@@ -1,3 +1,10 @@
+//
+//  FolderManager.swift
+//  FreedomSound
+//
+//  Created by Gaëtan Boyals on 06/04/2026.
+//
+
 import Foundation
 import Combine
 import UniformTypeIdentifiers
