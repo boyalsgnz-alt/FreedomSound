@@ -25,16 +25,12 @@ struct SettingsView: View {
             Grid(horizontalSpacing: 30, verticalSpacing: 30) {
                 GridRow {
                     CountdownView()
-                        .glassEffect(.regular.tint(Color(.sRGB, red: 177/255, green: 222/255, blue: 224/255, opacity: 1)).interactive(), in: .rect(cornerRadius: 16.0))
+                        .glassEffect(.regular.tint(Color(.sRGB, red: 215/255, green: 222/255, blue: 224/255, opacity: 0.5)).interactive(), in: .rect(cornerRadius: 16.0))
                     .aspectRatio(1, contentMode: .fit)
                     // .clipShape(RoundedRectangle(cornerRadius: 10))
                     
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(.ultraThinMaterial)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color(.sRGB, red: 150/255, green: 209/255, blue: 212/255, opacity: 1))
-                        }
+                    RoundedRectangle(cornerRadius: 16)
+                        .glassEffect(.regular.tint(Color.clear).interactive(), in: .rect(cornerRadius: 16.0))
                         .aspectRatio(1, contentMode: .fit)
                 }
                 

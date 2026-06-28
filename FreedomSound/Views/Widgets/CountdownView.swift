@@ -16,12 +16,20 @@ struct CountdownView: View {
     init() {
         expiryDate = getProvisioningProfileExpiration() ?? Date()
     }
+    
+    var clockColor: Color {
+        let diff = Int(expiryDate.timeIntervalSince(now))
+        return diff >= 172800
+            ? Color(red: 255/255, green: 153/255, blue: 20/255)
+            : Color(red: 33/255, green: 255/255, blue: 52/255)
+    }
 
     var body: some View {
         VStack() {
             Image(systemName: "clock.arrow.trianglehead.clockwise.rotate.90.path.dotted")
                 .font(.system(size: 35, weight: .semibold))
                 .frame(minWidth: 44, minHeight: 44)
+                .foregroundColor(clockColor)
             Spacer()
             Text("\(timeRemaining)")
                 .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
