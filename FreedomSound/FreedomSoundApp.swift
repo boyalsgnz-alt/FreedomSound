@@ -8,12 +8,28 @@
 import SwiftUI
 import AVFoundation
 
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    let notificationDelegate = NotificationDelegate() // référence forte gardée ici
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        UNUserNotificationCenter.current().delegate = notificationDelegate
+        requestNotificationPermission()
+        scheduleExpiryReminder()
+        return true
+    }
+}
+
 @main
 struct FreedomSoundApp: App {
     @StateObject private var folderManager: FolderManager
     @StateObject private var playbackManager: PlaybackQueue
     @StateObject private var libraryStore: LibraryStore
     @StateObject private var audioEngine: AudioEngine
+    
     private let scanner = LibraryScanner()
     private let parser = MetadataParser()
     private let lockScreen: LockScreenManager
@@ -47,8 +63,9 @@ struct FreedomSoundApp: App {
         _audioEngine = StateObject(wrappedValue: audioEngine)
         
         UNUserNotificationCenter.current().delegate = notificationDelegate
-        requestNotificationPermission()
-        scheduleExpiryReminder()
+        requestNotificationPermission {
+            scheduleExpiryReminder()
+        }
     }
     
     var body: some Scene {
