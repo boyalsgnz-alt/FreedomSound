@@ -37,44 +37,18 @@ struct SongListView: View {
                     Spacer()
                 }
             } else {
-                ScrollViewReader { proxy in
-                    List() {
-                        ForEach(filteredSongs) { file in
-                            Button {
-                                let filteredTracks = playlist.trackFileNames.compactMap { fileName in
-                                    libraryStore.tracks.first { $0.fileName == fileName }
-                                }
-                                playbackMgr.setNewPlaylist(playlist: playlist, tracks: filteredTracks)
-                                playbackMgr.setCurrentTrack(track: file)
-                            } label: {
-                                MusicRowView(file: file)
-                            }.id(file.id)
+                SongListContent(
+                    filteredSongs: filteredSongs,
+                    playlist: playlist,
+                    libraryStore: libraryStore,
+                    onSelect: { file in
+                        let filteredTracks = playlist.trackFileNames.compactMap { fileName in
+                            libraryStore.tracks.first { $0.fileName == fileName }
                         }
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets())
+                        playbackMgr.setNewPlaylist(playlist: playlist, tracks: filteredTracks)
+                        playbackMgr.setCurrentTrack(track: file)
                     }
-                    .listRowSpacing(16)
-                    .listStyle(.plain)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 0)
-                    .safeAreaInset(edge: .bottom) {
-                        Color.clear.frame(height: floatingPlayerHeight)
-                    }
-                    .navigationTitle(playlist.name)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button {
-                                withAnimation {
-                                    if let first = filteredSongs.first {
-                                        proxy.scrollTo(first.id, anchor: .top)
-                                    }
-                                }
-                            } label: {
-                                Image(systemName: "arrow.up")
-                            }
-                        }
-                    }
-                }
+                )
             }
         }
         .searchable(text: $query)
@@ -84,7 +58,7 @@ struct SongListView: View {
                 return
             }
             do {
-                try await Task.sleep(for: .milliseconds(1000))
+                try await Task.sleep(for: .milliseconds(400))
                 debouncedQuery = query
             } catch {
             }
