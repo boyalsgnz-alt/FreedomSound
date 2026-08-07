@@ -16,7 +16,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     }
 }
 
-func requestNotificationPermission() {
+func requestNotificationPermission(completion: @escaping () -> Void = {}) {
     UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
         if let error = error {
             print("Permission error: \(error)")
@@ -26,35 +26,37 @@ func requestNotificationPermission() {
 
 func scheduleExpiryReminder() {
     let center = UNUserNotificationCenter.current()
-    center.removeAllPendingNotificationRequests()
 
-    let installDate = getProvisioningProfileExpiration() ?? Date()
-    
-    if UserDefaults.standard.object(forKey: "installDate") == nil {
-        UserDefaults.standard.set(Date(), forKey: "installDate")
-    }
+        let expiryDate: Date
+        if let saved = UserDefaults.standard.object(forKey: "appExpiryDate") as? Date {
+            expiryDate = saved
+        } else {
+            expiryDate = getProvisioningProfileExpiration()
+                ?? Calendar.current.date(byAdding: .day, value: 7, to: Date())!
+            UserDefaults.standard.set(expiryDate, forKey: "appExpiryDate")
+        }
 
-    let expiryDate = Calendar.current.date(byAdding: .day, value: 7, to: installDate)!
-    let reminderDate = Calendar.current.date(byAdding: .day, value: -1, to: expiryDate)!
+        center.getPendingNotificationRequests { requests in
+            guard !requests.contains(where: { $0.identifier == "expiryReminder" }) else { return }
 
-    let content = UNMutableNotificationContent()
-    content.title = "App Expiring Soon"
-    content.body = "Your app will expire tomorrow. Reinstall it to continue using it."
-    content.sound = .default
+            guard let reminderDate = Calendar.current.date(byAdding: .day, value: -1, to: expiryDate),
+                  reminderDate > Date() else { return } // évite de programmer une date passée
 
-    let trigger = UNCalendarNotificationTrigger(
-        dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute],
-                                                      from: reminderDate),
-        repeats: false
-    )
+            let content = UNMutableNotificationContent()
+            content.title = "App Expiring Soon"
+            content.body = "Your app will expire tomorrow. Reinstall it to continue using it."
+            content.sound = .default
 
-    let request = UNNotificationRequest(
-        identifier: "expiryReminder",
-        content: content,
-        trigger: trigger
-    )
-
-    center.add(request)
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: Calendar.current.dateComponents(
+                    [.year, .month, .day, .hour, .minute], from: reminderDate),
+                repeats: false
+            )
+            let request = UNNotificationRequest(
+                identifier: "expiryReminder", content: content, trigger: trigger
+            )
+            center.add(request)
+        }
 }
 
 func getProvisioningProfileExpiration() -> Date? {
