@@ -1,3 +1,10 @@
+//
+//  FolderManager.swift
+//  FreedomSound
+//
+//  Created by Gaëtan Boyals on 06/04/2026.
+//
+
 import Foundation
 import Combine
 import UniformTypeIdentifiers
@@ -41,9 +48,7 @@ final class FolderManager: ObservableObject {
     }
     
     func restoreFolderFromBookmark() {
-        guard let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) else {
-            return
-        }
+        guard let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) else { return }
         
         do {
             var isStale = false
@@ -55,17 +60,41 @@ final class FolderManager: ObservableObject {
             )
             
             if isStale {
-                let newBookmark = try url.bookmarkData(
-                    options: [],
-                    includingResourceValuesForKeys: nil,
-                    relativeTo: nil
-                )
-                UserDefaults.standard.set(newBookmark, forKey: bookmarkKey)
+                if url.startAccessingSecurityScopedResource() {
+                    if let newBookmark = try? url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil) {
+                        UserDefaults.standard.set(newBookmark, forKey: bookmarkKey)
+                    }
+                    url.stopAccessingSecurityScopedResource()
+                }
             }
             
             musicFolder = url
         } catch {
-            return
+            print("Failed to resolve bookmark:", error)
+        }
+    }
+    
+    func withAccessToFolder<T>(_ body: (URL) throws -> T) rethrows -> T? {
+        guard let url = musicFolder else { return nil }
+        let didAccess = url.startAccessingSecurityScopedResource()
+        defer { if didAccess { url.stopAccessingSecurityScopedResource() } }
+        return try body(url)
+    }
+
+    
+    func writeFileToDir() {
+        let directory = musicFolder!
+        let fileURL = directory.appending(path: "example.txt")
+        
+        // 3. Prepare content
+        let content = "Hello, this is a file saved from SwiftUI!"
+        
+        // 4. Try writing the file atomically to ensure safety
+        do {
+            try content.write(to: fileURL, atomically: true, encoding: .utf8)
+            print("Saved successfully to Documents!")
+        } catch {
+            print("Failed to save: \(error.localizedDescription)")
         }
     }
     

@@ -40,9 +40,11 @@ final class LibraryCoordinator {
     
     func loadLibrary() async {
         do {
-            let files = try libScanner.scanFolder(folderUrl: folderMgr.musicFolder) ?? []
+            let files = try folderMgr.withAccessToFolder { url in
+                try libScanner.scanFolder(folderUrl: url)
+            }
             Task.detached(priority: .userInitiated) {
-                let (songs, playlists) = await self.metadataParser.parseAudioFiles(files: files)
+                let (songs, playlists) = await self.metadataParser.parseAudioFiles(files: files!!)
                 
                 await MainActor.run {
                     self.libStore.tracks = songs
