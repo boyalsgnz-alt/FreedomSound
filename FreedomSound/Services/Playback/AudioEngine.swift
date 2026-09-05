@@ -131,6 +131,9 @@ class AudioEngine: NSObject, ObservableObject, AVAudioPlayerDelegate {
             currentTime = newPlayer.currentTime
             duration = newPlayer.duration
             isPlaying = true
+            // A scrub gesture interrupted mid-drag (e.g. by a track change) never resets this,
+            // which would otherwise permanently freeze the progress display for the new track too.
+            isScrubbing = false
             startProgressTimer()
         } catch {
             print(error)
@@ -182,6 +185,9 @@ class AudioEngine: NSObject, ObservableObject, AVAudioPlayerDelegate {
         guard let player else { return }
         player.pause()
         isPlaying = false
+        // Covers interruptions (calls, Siri, another app taking audio focus) that cut a slider
+        // drag short without SwiftUI ever calling onEditingChanged(false) to clear this.
+        isScrubbing = false
     }
     
     func resume() {

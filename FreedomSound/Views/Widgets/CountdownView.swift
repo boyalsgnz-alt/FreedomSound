@@ -19,7 +19,7 @@ struct CountdownView: View {
     
     var clockColor: Color {
         let diff = Int(expiryDate.timeIntervalSince(now))
-        return diff >= 172800
+        return diff <= 172800
             ? Color(red: 255/255, green: 153/255, blue: 20/255)
             : Color(red: 33/255, green: 255/255, blue: 52/255)
     }

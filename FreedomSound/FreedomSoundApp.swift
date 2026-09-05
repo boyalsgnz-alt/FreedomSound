@@ -75,6 +75,7 @@ struct FreedomSoundApp: App {
                 .environmentObject(libraryStore)
                 .environmentObject(playbackManager)
                 .environmentObject(audioEngine)
+                .environmentObject(coordinator)
                 .task(id: folderManager.musicFolder) {
                     guard folderManager.musicFolder != nil else { return }
                     await coordinator.loadLibrary()

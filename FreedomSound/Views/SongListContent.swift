@@ -14,6 +14,8 @@ struct SongListContent: View {
     let libraryStore: LibraryStore
     let onSelect: (Track) -> Void
 
+    @State private var trackToAddToPlaylist: Track?
+
     var body: some View {
         ScrollViewReader { proxy in
             List {
@@ -24,6 +26,13 @@ struct SongListContent: View {
                         MusicRowView(file: file)
                     }
                     .id(file.id)
+                    .contextMenu {
+                        Button {
+                            trackToAddToPlaylist = file
+                        } label: {
+                            Label("Add to Playlist", systemImage: "text.badge.plus")
+                        }
+                    }
                 }
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets())
@@ -45,6 +54,9 @@ struct SongListContent: View {
                     }
                 }
             }
+        }
+        .sheet(item: $trackToAddToPlaylist) { track in
+            AddToPlaylistView(track: track)
         }
     }
 }
