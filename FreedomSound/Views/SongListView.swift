@@ -22,7 +22,12 @@ struct SongListView: View {
     let playlist: Playlist
     
     var tracks: [Track] {
-        playlist.trackFileNames.compactMap { fileName in
+        // The synthetic "All Songs" playlist has no sourceURL and its trackFileNames are only
+        // a snapshot taken when it was navigated to — always mirror the live library instead.
+        guard playlist.sourceURL != nil else {
+            return libraryStore.tracks
+        }
+        return playlist.trackFileNames.compactMap { fileName in
             libraryStore.tracks.first { $0.fileName == fileName }
         }
     }
@@ -42,10 +47,7 @@ struct SongListView: View {
                     playlist: playlist,
                     libraryStore: libraryStore,
                     onSelect: { file in
-                        let filteredTracks = playlist.trackFileNames.compactMap { fileName in
-                            libraryStore.tracks.first { $0.fileName == fileName }
-                        }
-                        playbackMgr.setNewPlaylist(playlist: playlist, tracks: filteredTracks)
+                        playbackMgr.setNewPlaylist(playlist: playlist, tracks: tracks)
                         playbackMgr.setCurrentTrack(track: file)
                     }
                 )
@@ -63,18 +65,26 @@ struct SongListView: View {
             } catch {
             }
         }
-        .onChange(of: debouncedQuery) { _, newValue in
-            if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                filteredSongs = tracks
-            } else {
-                filteredSongs = tracks.filter {
-                    $0.title.localizedCaseInsensitiveContains(newValue) ||
-                    $0.artist.localizedCaseInsensitiveContains(newValue)
-                }
-            }
+        .onChange(of: debouncedQuery) { _, _ in
+            applyFilter()
+        }
+        .onChange(of: libraryStore.tracks) { _, _ in
+            applyFilter()
         }
         .onAppear {
+            applyFilter()
+        }
+    }
+
+    private func applyFilter() {
+        let trimmedQuery = debouncedQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedQuery.isEmpty {
             filteredSongs = tracks
+        } else {
+            filteredSongs = tracks.filter {
+                $0.title.localizedCaseInsensitiveContains(trimmedQuery) ||
+                $0.artist.localizedCaseInsensitiveContains(trimmedQuery)
+            }
         }
     }
 }

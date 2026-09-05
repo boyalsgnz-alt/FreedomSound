@@ -38,10 +38,11 @@ final class PlaybackQueue: ObservableObject {
     
     func enableShuffle() {
         isShuffled.toggle()
+        guard let currentTrack else { return }
         if (!isShuffled) {
-            currentIndex = playlistTracks.firstIndex(of: currentTrack!)!
+            currentIndex = playlistTracks.firstIndex(of: currentTrack) ?? currentIndex
         } else {
-            currentIndex = playlistTracksShuffled.firstIndex(of: currentTrack!)!
+            currentIndex = playlistTracksShuffled.firstIndex(of: currentTrack) ?? currentIndex
         }
     }
     
@@ -50,7 +51,8 @@ final class PlaybackQueue: ObservableObject {
     }
     
     func setCurrentTrack(track: Track) {
-        currentIndex = activePlaylist.firstIndex(of: track)!
+        guard let index = activePlaylist.firstIndex(of: track) else { return }
+        currentIndex = index
         currentTrack = activePlaylist[currentIndex]
     }
     

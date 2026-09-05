@@ -57,7 +57,9 @@ class LockScreenManager {
     private func updateLockScreenInfo() async {
         guard let currentFile = playbackQueue.currentTrack, let player = audioEngine.player else { return }
         
-        let artwork = await ArtworkLoader.shared.loadArtwork(for: currentFile.url, fullSize: false).value
+        // Full-size artwork, not the small list-thumbnail — the system enlarges this for the
+        // expanded lock screen / Dynamic Island, and upscaling the 120px thumbnail looked pixelated.
+        let artwork = await ArtworkLoader.shared.loadArtwork(for: currentFile.url, fullSize: true).value
         
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: currentFile.title,
@@ -67,7 +69,9 @@ class LockScreenManager {
             MPNowPlayingInfoPropertyPlaybackRate: player.isPlaying ? 1.0 : 0.0
         ]
         
-        info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: artwork!.size) { _ in artwork! }
+        if let artwork {
+            info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: artwork.size) { _ in artwork }
+        }
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }

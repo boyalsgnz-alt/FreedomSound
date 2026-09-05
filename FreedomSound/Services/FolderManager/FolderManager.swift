@@ -41,7 +41,10 @@ final class FolderManager: ObservableObject {
             )
             
             UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
-            musicFolder = folderURL
+            // Re-resolve from the bookmark we just saved rather than reusing the picker's URL directly —
+            // the raw picker URL's security scope has proven unreliable for the very first library scan
+            // until the app is relaunched, whereas the bookmark-resolved URL always works.
+            restoreFolderFromBookmark()
         } catch {
             print("Failed to save bookmark:", error)
         }

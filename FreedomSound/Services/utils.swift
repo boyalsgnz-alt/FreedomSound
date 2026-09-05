@@ -21,6 +21,7 @@ func requestNotificationPermission(completion: @escaping () -> Void = {}) {
         if let error = error {
             print("Permission error: \(error)")
         }
+        completion()
     }
 }
 
