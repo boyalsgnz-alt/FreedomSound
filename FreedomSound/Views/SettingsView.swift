@@ -9,6 +9,36 @@ import SwiftUI
 import AVFoundation
 import MediaPlayer
 
+private struct FolderSquareView: View {
+    let folderURL: URL?
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack {
+                Image(systemName: folderURL != nil ? "checkmark.circle.fill" : "folder.badge.plus")
+                    .font(.system(size: 35, weight: .semibold))
+                    .frame(minWidth: 44, minHeight: 44)
+                    .foregroundStyle(folderURL != nil ? Color(red: 33/255, green: 255/255, blue: 52/255) : .orange)
+                Spacer()
+                Text(folderURL != nil ? "Folder Selected" : "Select Folder")
+                    .font(.system(size: 20, weight: .bold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(folderURL?.lastPathComponent ?? "Tap to choose")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 struct SettingsView: View {
     @EnvironmentObject var folderMgr: FolderManager
     @EnvironmentObject var libraryStore: LibraryStore
@@ -27,30 +57,16 @@ struct SettingsView: View {
             //            Spacer()
             //            InfinityLoader()
             //            Spacer()
-            Grid(horizontalSpacing: 30, verticalSpacing: 30) {
-                GridRow {
-                    CountdownView()
-                        .glassEffect(.regular.tint(Color(.sRGB, red: 215/255, green: 222/255, blue: 224/255, opacity: 0.5)).interactive(), in: .rect(cornerRadius: 16.0))
-                        .aspectRatio(1, contentMode: .fit)
-                    // .clipShape(RoundedRectangle(cornerRadius: 10))
-                    
-                    RoundedRectangle(cornerRadius: 16)
-                        .glassEffect(.regular.tint(Color.clear).interactive(), in: .rect(cornerRadius: 16.0))
-                        .aspectRatio(1, contentMode: .fit)
-                }
-                
-                GridRow {
-                    Rectangle().fill(Color.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .aspectRatio(1, contentMode: .fit)
-                    
-                    Rectangle().background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.blue)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            HStack(spacing: 30) {
+                CountdownView()
+                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16.0))
                     .aspectRatio(1, contentMode: .fit)
+
+                FolderSquareView(folderURL: folderMgr.musicFolder) {
+                    showingFolderPicker = true
                 }
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16.0))
+                .aspectRatio(1, contentMode: .fit)
             }
             .padding(8)
 
@@ -75,11 +91,6 @@ struct SettingsView: View {
             .padding(.horizontal)
 
             Spacer()
-            Button {
-                showingFolderPicker.toggle()
-            } label: {
-                Label("Choose Folder", systemImage: "folder.badge.gearshape")
-            }
         }
         .sheet(isPresented: $showingFolderPicker) {
             FolderPicker { url in
